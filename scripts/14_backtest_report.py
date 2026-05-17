@@ -26,7 +26,7 @@ def scenario_summary(rows: list[dict[str, str]]) -> list[tuple[str, int, float, 
         out.append((scenario, len(vals), sum(vals), winrate))
     return out
 
-def generate_report(processed_dir: Path = DATA_PROCESSED) -> str:
+def generate_report(processed_dir: Path = DATA_PROCESSED, real_dataset: bool = False) -> str:
     swaps = read_csv(processed_dir / "wallet_swaps.csv")
     paired = read_csv(processed_dir / "trades_paired.csv")
     fee_rows = read_csv(processed_dir / "fee_adjusted_pnl.csv")
@@ -41,7 +41,8 @@ def generate_report(processed_dir: Path = DATA_PROCESSED) -> str:
     net = sum_col(fee_rows, "net_pnl_usd")
     missing_fee = sum(1 for r in fee_rows if r.get("fee_confidence") == "low_missing_observed_fee")
 
-    lines: list[str] = ["# Backtest report", ""]
+    dataset_status = "RUN" if real_dataset else "NOT RUN"
+    lines: list[str] = ["# Backtest report", "", f"real dataset: {dataset_status}", ""]
     lines.extend(f"- {text}" for text in MANDATORY)
     lines.extend([
         "", "## Coverage",
@@ -66,17 +67,25 @@ def generate_report(processed_dir: Path = DATA_PROCESSED) -> str:
     if not stress:
         lines.append("| UNKNOWN_no_copy_stress_model | 0 | 0.000000 | 0.00% |")
     latency_status = "AVAILABLE" if price_series_exists else "UNKNOWN"
-    lines.extend(["", "## Latency replay", f"latency_replay_status: {latency_status}", "", "## Limitations", "- Dashboard metrics are not raw SoT.", "- Copy-stress scenarios are formulaic stress tests, not true delayed-entry backtests.", "- True latency replay requires `price_series.csv` with delayed-entry prices."])
+    lines.extend([
+        "", "## Latency replay",
+        f"latency_replay_status: {latency_status}",
+        "", "## Limitations",
+        "- Dashboard metrics are not raw SoT.",
+        "- Copy-stress scenarios are formulaic stress tests, not true delayed-entry backtests.",
+        "- True latency replay requires `price_series.csv` with delayed-entry prices.",
+    ])
     return "\n".join(lines) + "\n"
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="")
+    parser.add_argument("--real-dataset", action="store_true")
     args = parser.parse_args()
     ensure_dirs()
     output = Path(args.output) if args.output else REPORTS / "backtest_report.md"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(generate_report(), encoding="utf-8")
+    output.write_text(generate_report(real_dataset=args.real_dataset), encoding="utf-8")
     print(f"[OK] wrote backtest report to {output}")
 
 if __name__ == "__main__":
