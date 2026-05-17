@@ -1,0 +1,5 @@
+timestamp,tx_hash,token_mint,token_symbol,side,token_amount,usd_amount,fee_usd
+2026-05-17T12:00:00Z,buy_a,A_MINT,AAA,buy,10,100,0
+2026-05-17T12:05:00Z,sell_a,A_MINT,AAA,sell,5,70,0
+2026-05-17T12:00:00Z,buy_b,B_MINT,BBB,buy,6,60,0
+2026-05-17T12:00:00Z,buy_d,D_MINT,DDD,buy,2,20,0
