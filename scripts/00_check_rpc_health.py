@@ -31,6 +31,12 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+except ImportError:
+    pass  # stdlib-only fallback: read env from shell
+
 # ---------------------------------------------------------------------------
 # Paths (mirror common.py layout but avoid importing it so this script
 # can run even if common.py has dependency issues)
