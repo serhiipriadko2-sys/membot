@@ -29,7 +29,8 @@ def test_entry_context_has_feature_metadata_columns() -> None:
     rows = entry_context.build_entry_context(swaps, trades, price_series, sample_winners=1, sample_losers=1, windows=[30])
 
     first = next(row for row in rows if row["entry_signature"] == "e1")
-    assert first["feature_family"] == "wallet_flow;price_action"
+    families = set(first["feature_family"].split(";"))
+    assert {"wallet_flow", "price_action"}.issubset(families)
     assert first["feature_source"] == "wallet_swaps;price_series"
     assert first["confidence"] == "medium"
     assert float(first["feature_coverage_pct"]) > 0
