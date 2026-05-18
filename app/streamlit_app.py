@@ -34,6 +34,21 @@ DATASETS = {
     "open_positions": DATA_DIR / "open_positions.csv",
 }
 
+RU_DATASET_LABELS = {
+    "wallet_swaps": "Свапы кошелька",
+    "trades_paired": "FIFO-сделки",
+    "latency_sim": "Latency replay",
+    "fee_adjusted_pnl": "PnL с комиссиями",
+    "copy_stress_model": "Copy-stress модель",
+    "entry_context": "Контекст входа",
+    "trigger_tests": "Тесты триггеров",
+    "open_positions": "Открытые позиции",
+    "metrics_report": "Отчёт метрик",
+    "entry_context_report": "Отчёт контекста входа",
+    "readme": "README / заметки",
+    "other": "Другое",
+}
+
 KNOWN_ARTIFACT_TYPES = [
     *DATASETS.keys(),
     "metrics_report",
@@ -42,14 +57,98 @@ KNOWN_ARTIFACT_TYPES = [
     "other",
 ]
 
+SOURCE_LABELS = {
+    "Локальные CSV": "local",
+    "Загруженные файлы": "upload",
+    "Supabase": "supabase",
+}
+
 SUPABASE_TABLE_RUNS = "dataset_runs"
 SUPABASE_TABLE_ARTIFACTS = "dataset_artifacts"
+DEFAULT_WALLET = "7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5"
 
 st.set_page_config(
-    page_title="membot forensic app",
+    page_title="membot — forensic dashboard",
     page_icon="🧪",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
+
+
+def inject_css() -> None:
+    st.markdown(
+        """
+        <style>
+        :root {
+          --membot-bg-card: rgba(15, 23, 42, 0.72);
+          --membot-border: rgba(148, 163, 184, 0.22);
+          --membot-cyan: #38bdf8;
+          --membot-green: #22c55e;
+          --membot-orange: #f97316;
+          --membot-red: #ef4444;
+        }
+        .block-container {padding-top: 1.2rem; padding-bottom: 3rem; max-width: 1380px;}
+        [data-testid="stMetric"] {
+          background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(17,24,39,.70));
+          border: 1px solid var(--membot-border);
+          border-radius: 18px;
+          padding: 14px 16px;
+          box-shadow: 0 12px 30px rgba(0,0,0,.18);
+        }
+        [data-testid="stMetricLabel"] {font-size: .82rem; color: #cbd5e1;}
+        [data-testid="stMetricValue"] {font-size: 1.42rem;}
+        div[data-testid="stExpander"] {
+          border: 1px solid var(--membot-border);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        .membot-hero {
+          border: 1px solid rgba(56,189,248,.25);
+          border-radius: 24px;
+          padding: 20px 22px;
+          margin: 0 0 18px 0;
+          background:
+            radial-gradient(circle at top left, rgba(56,189,248,.22), transparent 28%),
+            linear-gradient(135deg, rgba(2,6,23,.95), rgba(15,23,42,.82));
+          box-shadow: 0 18px 48px rgba(0,0,0,.22);
+        }
+        .membot-hero h1 {margin: 0 0 6px 0; font-size: 2.1rem; line-height: 1.1;}
+        .membot-hero p {margin: 4px 0; color: #cbd5e1; font-size: .98rem;}
+        .membot-badges {display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px;}
+        .membot-badge {
+          display: inline-flex; align-items: center; gap: 6px;
+          border: 1px solid rgba(148,163,184,.26);
+          border-radius: 999px; padding: 6px 10px;
+          background: rgba(15,23,42,.75); color: #e5e7eb; font-size: .78rem;
+        }
+        .membot-badge.good {border-color: rgba(34,197,94,.35); color: #bbf7d0;}
+        .membot-badge.warn {border-color: rgba(249,115,22,.40); color: #fed7aa;}
+        .membot-badge.lock {border-color: rgba(56,189,248,.40); color: #bae6fd;}
+        .membot-card {
+          border: 1px solid var(--membot-border);
+          border-radius: 20px;
+          padding: 16px 18px;
+          background: var(--membot-bg-card);
+          margin-bottom: 12px;
+        }
+        .membot-card h3 {margin-top: 0; margin-bottom: 8px; font-size: 1.05rem;}
+        .membot-muted {color: #94a3b8; font-size: .9rem;}
+        .membot-small {font-size: .82rem; color: #94a3b8;}
+        .membot-ok {color: #86efac; font-weight: 600;}
+        .membot-warn {color: #fdba74; font-weight: 600;}
+        .membot-danger {color: #fca5a5; font-weight: 600;}
+        @media (max-width: 640px) {
+          .block-container {padding-left: .8rem; padding-right: .8rem; padding-top: .8rem;}
+          .membot-hero {padding: 16px 15px; border-radius: 18px;}
+          .membot-hero h1 {font-size: 1.55rem;}
+          [data-testid="stMetric"] {padding: 10px 12px; border-radius: 14px;}
+          [data-testid="stMetricValue"] {font-size: 1.1rem;}
+          .membot-card {padding: 13px 14px; border-radius: 16px;}
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -75,7 +174,6 @@ def secret_value(name: str) -> str | None:
 
 
 def require_app_access() -> bool:
-    """Protect Supabase reads/writes when the app is publicly reachable."""
     required_pin = secret_value("APP_ACCESS_PIN")
     if not required_pin:
         return False
@@ -88,7 +186,6 @@ def supabase_client() -> Any | None:
     if create_client is None:
         return None
     url = secret_value("SUPABASE_URL")
-    # Server-side Streamlit only. Do not put service_role keys in GitHub or browser code.
     key = secret_value("SUPABASE_SERVICE_ROLE_KEY") or secret_value("SUPABASE_KEY")
     if not url or not key:
         return None
@@ -97,15 +194,15 @@ def supabase_client() -> Any | None:
 
 def get_supabase_error() -> str | None:
     if create_client is None:
-        return "Python package `supabase` is not installed. Run `pip install -r requirements.txt`."
+        return "Пакет `supabase` не установлен. Проверь `requirements.txt` и перезапусти деплой."
     if not secret_value("SUPABASE_URL"):
-        return "Missing Streamlit secret `SUPABASE_URL`."
+        return "Не найден secret `SUPABASE_URL`."
     if not (secret_value("SUPABASE_SERVICE_ROLE_KEY") or secret_value("SUPABASE_KEY")):
-        return "Missing Streamlit secret `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_KEY`."
+        return "Не найден secret `SUPABASE_SERVICE_ROLE_KEY` или `SUPABASE_KEY`."
     if not secret_value("APP_ACCESS_PIN"):
-        return "Missing Streamlit secret `APP_ACCESS_PIN`; Supabase access is locked for safety."
+        return "Не найден secret `APP_ACCESS_PIN`; доступ к Supabase заблокирован."
     if not require_app_access():
-        return "Enter the correct APP access PIN in the sidebar to unlock Supabase."
+        return "Введи правильный PIN в сайдбаре, чтобы открыть Supabase."
     return None
 
 
@@ -115,6 +212,10 @@ def sha256_bytes(data: bytes) -> str:
 
 def decode_text(data: bytes) -> str:
     return data.decode("utf-8", errors="replace")
+
+
+def ru_label(name: str) -> str:
+    return RU_DATASET_LABELS.get(name, name)
 
 
 def infer_artifact_type(file_name: str) -> str:
@@ -159,12 +260,13 @@ def local_dataset_status() -> pd.DataFrame:
         exists = path.exists()
         rows.append(
             {
-                "dataset": name,
-                "path": str(path.relative_to(ROOT)),
-                "exists": exists,
-                "bytes": path.stat().st_size if exists else 0,
-                "rows": len(load_csv(str(path))) if exists else 0,
-                "source": "local",
+                "Артефакт": ru_label(name),
+                "Код": name,
+                "Файл": str(path.relative_to(ROOT)),
+                "Есть": exists,
+                "Байт": path.stat().st_size if exists else 0,
+                "Строк": len(load_csv(str(path))) if exists else 0,
+                "Источник": "локально",
             }
         )
     return pd.DataFrame(rows)
@@ -176,12 +278,13 @@ def artifact_status(source: str, artifacts: dict[str, dict[str, Any]]) -> pd.Dat
         artifact = artifacts.get(name)
         rows.append(
             {
-                "dataset": name,
-                "path": artifact.get("file_name") if artifact else "—",
-                "exists": artifact is not None,
-                "bytes": artifact.get("bytes", 0) if artifact else 0,
-                "rows": artifact.get("row_count", 0) if artifact else 0,
-                "source": source,
+                "Артефакт": ru_label(name),
+                "Код": name,
+                "Файл": artifact.get("file_name") if artifact else "—",
+                "Есть": artifact is not None,
+                "Байт": artifact.get("bytes", 0) if artifact else 0,
+                "Строк": artifact.get("row_count", 0) if artifact else 0,
+                "Источник": source,
             }
         )
     return pd.DataFrame(rows)
@@ -196,13 +299,13 @@ def selected_supabase_artifacts() -> dict[str, dict[str, Any]]:
 
 
 def current_source() -> str:
-    return st.session_state.get("data_source", "Local CSV")
+    return st.session_state.get("data_source", "Локальные CSV")
 
 
 def dataset_status() -> pd.DataFrame:
     source = current_source()
-    if source == "Uploaded files":
-        return artifact_status("upload", uploaded_artifacts())
+    if source == "Загруженные файлы":
+        return artifact_status("загрузка", uploaded_artifacts())
     if source == "Supabase":
         return artifact_status("supabase", selected_supabase_artifacts())
     return local_dataset_status()
@@ -210,7 +313,7 @@ def dataset_status() -> pd.DataFrame:
 
 def get_dataset_df(name: str) -> pd.DataFrame:
     source = current_source()
-    if source == "Uploaded files":
+    if source == "Загруженные файлы":
         return artifact_to_dataframe(uploaded_artifacts().get(name))
     if source == "Supabase":
         return artifact_to_dataframe(selected_supabase_artifacts().get(name))
@@ -224,6 +327,12 @@ def find_col(df: pd.DataFrame, candidates: Iterable[str]) -> str | None:
         if col in existing:
             return col
     return None
+
+
+def numeric_series(df: pd.DataFrame, col: str | None) -> pd.Series:
+    if not col or col not in df.columns:
+        return pd.Series(dtype=float)
+    return pd.to_numeric(df[col], errors="coerce")
 
 
 def metric_number(value: object, fallback: str = "—") -> str:
@@ -241,13 +350,14 @@ def metric_number(value: object, fallback: str = "—") -> str:
 
 def render_missing(name: str, path: Path | None = None) -> None:
     source = current_source()
-    if source == "Local CSV" and path is not None:
+    label = ru_label(name)
+    if source == "Локальные CSV" and path is not None:
         st.info(
-            f"`{name}` не найден: `{path.relative_to(ROOT)}`. "
-            "Сначала запусти pipeline или положи CSV в `data/processed/`."
+            f"`{label}` пока не найден: `{path.relative_to(ROOT)}`. "
+            "Запусти pipeline или загрузи CSV через вкладку `Загрузка / Supabase`."
         )
     else:
-        st.info(f"`{name}` не найден в источнике `{source}`.")
+        st.info(f"`{label}` пока не найден в источнике `{source}`.")
 
 
 def pnl_column(df: pd.DataFrame) -> str | None:
@@ -264,6 +374,10 @@ def pnl_column(df: pd.DataFrame) -> str | None:
     )
 
 
+def time_column(df: pd.DataFrame) -> str | None:
+    return find_col(df, ["entry_time_utc", "block_time_utc", "timestamp", "buy_time", "sell_time"])
+
+
 def list_supabase_runs(limit: int = 50) -> list[dict[str, Any]]:
     error = get_supabase_error()
     if error:
@@ -271,7 +385,7 @@ def list_supabase_runs(limit: int = 50) -> list[dict[str, Any]]:
         return []
     client = supabase_client()
     if client is None:
-        st.warning("Supabase client is not available.")
+        st.warning("Supabase client недоступен.")
         return []
     try:
         response = (
@@ -283,7 +397,7 @@ def list_supabase_runs(limit: int = 50) -> list[dict[str, Any]]:
         )
         return list(response.data or [])
     except Exception as exc:
-        st.error(f"Supabase list_runs failed: {exc}")
+        st.error(f"Ошибка чтения runs из Supabase: {exc}")
         return []
 
 
@@ -304,7 +418,7 @@ def load_supabase_artifacts(run_id: str) -> dict[str, dict[str, Any]]:
             .execute()
         )
     except Exception as exc:
-        st.error(f"Supabase load_artifacts failed: {exc}")
+        st.error(f"Ошибка чтения артефактов Supabase: {exc}")
         return {}
 
     artifacts: dict[str, dict[str, Any]] = {}
@@ -339,12 +453,12 @@ def save_artifacts_to_supabase(
         st.error(error)
         return None
     if not artifacts:
-        st.error("No uploaded artifacts to save.")
+        st.error("Нет артефактов для сохранения.")
         return None
 
     client = supabase_client()
     if client is None:
-        st.error("Supabase client is not available.")
+        st.error("Supabase client недоступен.")
         return None
 
     stats = {
@@ -386,71 +500,127 @@ def save_artifacts_to_supabase(
         client.table(SUPABASE_TABLE_ARTIFACTS).insert(rows).execute()
         return run_id
     except Exception as exc:
-        st.error(f"Supabase save failed: {exc}")
+        st.error(f"Ошибка сохранения в Supabase: {exc}")
         return None
+
+
+def render_hero() -> None:
+    st.markdown(
+        """
+        <div class="membot-hero">
+          <h1>🧪 membot forensic</h1>
+          <p>Русский read-only dashboard для анализа Solana-кошелька: swaps → FIFO → latency → entry context.</p>
+          <p class="membot-muted">Это исследовательская панель. Она не торгует, не хранит приватные ключи и не объявляет “алгоритм раскрыт”.</p>
+          <div class="membot-badges">
+            <span class="membot-badge good">✅ Read-only</span>
+            <span class="membot-badge lock">🔐 Supabase через secrets</span>
+            <span class="membot-badge warn">⚠️ Метрики ≠ финальный claim</span>
+            <span class="membot-badge">📱 Mobile-first</span>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_sidebar() -> None:
     with st.sidebar:
-        st.header("Guardrails")
-        st.write("✅ Reads CSV/MD artifacts")
-        st.write("✅ No private keys")
-        st.write("✅ No trading execution")
-        st.write("⚠️ Dashboard metrics are not final algorithm claims")
+        st.title("membot")
+        st.caption("Панель управления источником данных")
 
-        st.divider()
-        st.header("Data source")
+        st.markdown("### Источник")
         st.selectbox(
-            "Source",
-            ["Local CSV", "Uploaded files", "Supabase"],
+            "Откуда читать данные",
+            ["Локальные CSV", "Загруженные файлы", "Supabase"],
             key="data_source",
-            help="Supabase requires Streamlit secrets and APP_ACCESS_PIN.",
+            help="Для мобильного режима удобнее: загрузка файлов или Supabase.",
         )
 
-        st.text_input("APP access PIN", type="password", key="app_access_pin")
+        st.text_input("PIN доступа", type="password", key="app_access_pin")
 
         if current_source() == "Supabase":
+            st.markdown("### Supabase runs")
             runs = list_supabase_runs()
             if runs:
                 labels = [
-                    f"{r.get('created_at', '')[:19]} | {r.get('wallet', '')[:8]} | {r.get('label') or r.get('source') or 'run'}"
+                    f"{r.get('created_at', '')[:19]} | {str(r.get('wallet', ''))[:8]} | {r.get('label') or r.get('source') or 'run'}"
                     for r in runs
                 ]
-                selected_idx = st.selectbox("Supabase run", range(len(labels)), format_func=lambda i: labels[i])
+                selected_idx = st.selectbox("Выбери прогон", range(len(labels)), format_func=lambda i: labels[i])
                 selected_run = runs[int(selected_idx)]
                 selected_run_id = str(selected_run["id"])
                 if st.session_state.get("supabase_run_id") != selected_run_id:
                     st.session_state["supabase_run_id"] = selected_run_id
                     st.session_state["supabase_artifacts"] = load_supabase_artifacts(selected_run_id)
-                if st.button("Refresh Supabase artifacts"):
+                if st.button("Обновить Supabase", use_container_width=True):
                     st.session_state["supabase_artifacts"] = load_supabase_artifacts(selected_run_id)
                     st.rerun()
             else:
-                st.info("No Supabase runs available yet.")
+                st.info("Сохранённых прогонов пока нет или Supabase закрыт.")
 
-        if st.button("Clear cache"):
+        st.markdown("### Безопасность")
+        st.write("✅ Только чтение/загрузка артефактов")
+        st.write("✅ Без приватных ключей")
+        st.write("✅ Без торговых операций")
+        st.write("⚠️ Dashboard не является торговым советом")
+
+        if st.button("Очистить кэш", use_container_width=True):
             st.cache_data.clear()
             st.cache_resource.clear()
             st.rerun()
 
 
+def render_research_status() -> None:
+    st.markdown("### Контур исследования")
+    cols = st.columns(4)
+    cards = [
+        ("1", "Raw replay", "signatures → transactions → swaps", "ok"),
+        ("2", "FIFO accounting", "paired trades / PnL / hold time", "ok"),
+        ("3", "Latency & copy", "stress ≠ real latency replay", "warn"),
+        ("4", "Entry context", "нужны controls до claims", "warn"),
+    ]
+    for col, (num, title, text, mode) in zip(cols, cards):
+        klass = "membot-ok" if mode == "ok" else "membot-warn"
+        col.markdown(
+            f"""
+            <div class="membot-card">
+              <div class="membot-small">Этап {num}</div>
+              <h3>{title}</h3>
+              <div class="{klass}">{text}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_quality_notes() -> None:
+    with st.expander("Как читать панель — guardrails", expanded=False):
+        st.markdown(
+            """
+            - `wallet_swaps` показывает нормализованные buy/sell события, но не доказывает алгоритм.
+            - `trades_paired` — это FIFO-бухгалтерия, а не предсказание покупки.
+            - `copy_stress_model` — стресс-модель комиссий/проскальзывания, не настоящий latency replay.
+            - `entry_context` становится сильным только вместе с `control_points` и out-of-sample проверкой.
+            - Любой `UNKNOWN` лучше, чем красивый ложный вывод.
+            """
+        )
+
+
 def render_upload_and_save() -> None:
-    st.subheader("Upload CSV/MD and save to Supabase")
-    st.write(
-        "Загружай `wallet_swaps.csv`, `trades_paired.csv`, `latency_sim.csv`, "
-        "`trigger_tests.csv`, `metrics_report.md` и другие артефакты. "
-        "Файлы читаются в память; секреты не нужны в CSV."
+    st.subheader("📤 Загрузка файлов и сохранение в Supabase")
+    st.markdown(
+        "Загружай CSV/MD/JSON/TXT артефакты с телефона. Панель покажет preview, посчитает SHA256 и сможет сохранить набор в Supabase."
     )
 
     uploaded_files = st.file_uploader(
-        "Upload artifacts",
+        "Выбери файлы",
         type=["csv", "md", "markdown", "json", "txt"],
         accept_multiple_files=True,
     )
 
     parsed: dict[str, dict[str, Any]] = {}
     if uploaded_files:
-        st.markdown("### Uploaded artifacts")
+        st.markdown("### Загруженные артефакты")
         for uploaded_file in uploaded_files:
             data = uploaded_file.getvalue()
             digest = sha256_bytes(data)
@@ -459,23 +629,24 @@ def render_upload_and_save() -> None:
             format_type = infer_content_format(uploaded_file.name)
             key = f"artifact_type_{uploaded_file.name}_{digest[:8]}"
             artifact_type = st.selectbox(
-                f"Artifact type for `{uploaded_file.name}`",
+                f"Тип артефакта для `{uploaded_file.name}`",
                 KNOWN_ARTIFACT_TYPES,
                 index=KNOWN_ARTIFACT_TYPES.index(auto_type),
                 key=key,
+                format_func=ru_label,
             )
 
             row_count = 0
             if format_type == "csv":
                 preview_df = dataframe_from_text(content_text)
                 row_count = 0 if preview_df.empty else len(preview_df)
-                with st.expander(f"Preview {uploaded_file.name}", expanded=False):
-                    st.dataframe(preview_df.head(50), use_container_width=True)
+                with st.expander(f"Preview: {uploaded_file.name}", expanded=False):
+                    st.dataframe(preview_df.head(50), use_container_width=True, hide_index=True)
             elif format_type == "markdown":
-                with st.expander(f"Preview {uploaded_file.name}", expanded=False):
+                with st.expander(f"Preview: {uploaded_file.name}", expanded=False):
                     st.markdown(content_text[:8000])
             else:
-                with st.expander(f"Preview {uploaded_file.name}", expanded=False):
+                with st.expander(f"Preview: {uploaded_file.name}", expanded=False):
                     st.code(content_text[:8000])
 
             parsed[artifact_type] = {
@@ -485,27 +656,28 @@ def render_upload_and_save() -> None:
                 "row_count": row_count,
                 "sha256": digest,
                 "content_text": content_text,
-                "metadata": {"uploaded_via": "streamlit_app"},
+                "metadata": {"uploaded_via": "streamlit_app", "ui_language": "ru"},
                 "bytes": len(data),
             }
 
         st.session_state["uploaded_artifacts"] = parsed
     elif not uploaded_artifacts():
-        st.info("No files uploaded yet.")
+        st.info("Файлы ещё не загружены.")
 
     artifacts = uploaded_artifacts()
     if artifacts:
-        st.markdown("### Current uploaded artifact map")
+        st.markdown("### Карта текущих артефактов")
         st.dataframe(
             pd.DataFrame(
                 [
                     {
-                        "artifact_type": key,
-                        "file_name": value.get("file_name"),
-                        "format": value.get("content_format"),
-                        "rows": value.get("row_count"),
-                        "bytes": value.get("bytes"),
-                        "sha256": value.get("sha256"),
+                        "Тип": ru_label(key),
+                        "Код": key,
+                        "Файл": value.get("file_name"),
+                        "Формат": value.get("content_format"),
+                        "Строк": value.get("row_count"),
+                        "Байт": value.get("bytes"),
+                        "SHA256": value.get("sha256"),
                     }
                     for key, value in artifacts.items()
                 ]
@@ -514,16 +686,16 @@ def render_upload_and_save() -> None:
             hide_index=True,
         )
 
-        st.markdown("### Save to Supabase")
+        st.markdown("### Сохранить в Supabase")
         access_error = get_supabase_error()
         if access_error:
             st.warning(access_error)
         with st.form("save_artifacts_form"):
-            wallet = st.text_input("Wallet", value="7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5")
-            label = st.text_input("Run label", value="mobile-upload")
-            source = st.text_input("Source", value="streamlit_upload")
-            notes = st.text_area("Notes", value="Uploaded from mobile Streamlit app.")
-            submitted = st.form_submit_button("Save uploaded artifacts to Supabase")
+            wallet = st.text_input("Кошелёк", value=DEFAULT_WALLET)
+            label = st.text_input("Название прогона", value="mobile-upload")
+            source = st.text_input("Источник", value="streamlit_upload")
+            notes = st.text_area("Заметки", value="Загружено через мобильный Streamlit dashboard.")
+            submitted = st.form_submit_button("Сохранить артефакты в Supabase")
 
         if submitted:
             run_id = save_artifacts_to_supabase(
@@ -534,7 +706,7 @@ def render_upload_and_save() -> None:
                 artifacts=artifacts,
             )
             if run_id:
-                st.success(f"Saved to Supabase dataset_runs.id = `{run_id}`")
+                st.success(f"Сохранено в Supabase: `dataset_runs.id = {run_id}`")
                 st.session_state["data_source"] = "Supabase"
                 st.session_state["supabase_run_id"] = run_id
                 st.session_state["supabase_artifacts"] = load_supabase_artifacts(run_id)
@@ -542,37 +714,46 @@ def render_upload_and_save() -> None:
 
 def render_overview() -> None:
     status = dataset_status()
-    st.subheader("Data health")
+    st.subheader("📊 Состояние данных")
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Datasets present", int(status["exists"].sum()))
-    c2.metric("Known datasets", len(status))
-    c3.metric("Total rows", int(status["rows"].sum()))
-    c4.metric("Total bytes", int(status["bytes"].sum()))
+    c1.metric("Артефактов найдено", int(status["Есть"].sum()))
+    c2.metric("Ожидается", len(status))
+    c3.metric("Всего строк", int(status["Строк"].sum()))
+    c4.metric("Всего байт", int(status["Байт"].sum()))
     st.dataframe(status, use_container_width=True, hide_index=True)
 
     swaps = get_dataset_df("wallet_swaps")
     paired = get_dataset_df("trades_paired")
 
-    st.subheader("Pipeline snapshot")
+    st.subheader("🧭 Быстрый снимок pipeline")
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("wallet_swaps rows", len(swaps) if not swaps.empty else 0)
-    k2.metric("paired trades", len(paired) if not paired.empty else 0)
+    k1.metric("Строк swaps", len(swaps) if not swaps.empty else 0)
+    k2.metric("FIFO-сделок", len(paired) if not paired.empty else 0)
 
     side_col = find_col(swaps, ["side", "swap_side"])
     if side_col and not swaps.empty:
-        k3.metric("BUY rows", int((swaps[side_col].astype(str).str.upper() == "BUY").sum()))
-        k4.metric("SELL rows", int((swaps[side_col].astype(str).str.upper() == "SELL").sum()))
+        side = swaps[side_col].astype(str).str.upper()
+        k3.metric("BUY", int((side == "BUY").sum()))
+        k4.metric("SELL", int((side == "SELL").sum()))
     else:
-        k3.metric("BUY rows", "—")
-        k4.metric("SELL rows", "—")
+        k3.metric("BUY", "—")
+        k4.metric("SELL", "—")
 
     pcol = pnl_column(paired)
     if pcol and not paired.empty:
         pnl = pd.to_numeric(paired[pcol], errors="coerce")
         wins = (pnl > 0).sum()
         total = pnl.sum()
-        st.metric("Paired total PnL", metric_number(float(total)))
-        st.metric("Win rate", f"{wins / max(1, pnl.notna().sum()):.1%}")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("PnL FIFO", metric_number(float(total)))
+        m2.metric("Win rate", f"{wins / max(1, pnl.notna().sum()):.1%}")
+        if (pnl < 0).any():
+            m3.metric("Profit factor", metric_number(float(pnl[pnl > 0].sum() / abs(pnl[pnl < 0].sum()))))
+        else:
+            m3.metric("Profit factor", "—")
+
+    render_research_status()
+    render_quality_notes()
 
 
 def render_swaps() -> None:
@@ -581,21 +762,23 @@ def render_swaps() -> None:
         render_missing("wallet_swaps", DATASETS.get("wallet_swaps"))
         return
 
-    st.subheader("Normalized wallet swaps")
+    st.subheader("🔁 Нормализованные свапы")
     side_col = find_col(df, ["side", "swap_side"])
     confidence_col = find_col(df, ["parse_confidence", "confidence"])
+    mint_col = find_col(df, ["token_mint", "mint"])
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Rows", len(df))
-    c2.metric("Unique mints", df["token_mint"].nunique() if "token_mint" in df.columns else "—")
-    c3.metric("Failed rows", int((df[side_col].astype(str).str.upper() == "FAILED").sum()) if side_col else "—")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Строк", len(df))
+    c2.metric("Уникальных mint", df[mint_col].nunique() if mint_col else "—")
+    c3.metric("FAILED", int((df[side_col].astype(str).str.upper() == "FAILED").sum()) if side_col else "—")
+    c4.metric("UNKNOWN", int((df[side_col].astype(str).str.upper() == "UNKNOWN").sum()) if side_col else "—")
 
     if side_col and px is not None:
-        st.plotly_chart(px.histogram(df, x=side_col, title="Side distribution"), use_container_width=True)
+        st.plotly_chart(px.histogram(df, x=side_col, title="Распределение BUY / SELL / FAILED"), use_container_width=True)
     if confidence_col and px is not None:
-        st.plotly_chart(px.histogram(df, x=confidence_col, title="Parse confidence"), use_container_width=True)
+        st.plotly_chart(px.histogram(df, x=confidence_col, title="Качество парсинга"), use_container_width=True)
 
-    st.dataframe(df.head(500), use_container_width=True)
+    st.dataframe(df.head(500), use_container_width=True, hide_index=True)
 
 
 def render_trades() -> None:
@@ -604,62 +787,68 @@ def render_trades() -> None:
         render_missing("trades_paired", DATASETS.get("trades_paired"))
         return
 
-    st.subheader("Paired FIFO trades")
+    st.subheader("🧾 FIFO-сделки")
     pcol = pnl_column(df)
     hold_col = find_col(df, ["hold_seconds", "holding_seconds"])
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Trades", len(df))
-    if pcol:
-        pnl = pd.to_numeric(df[pcol], errors="coerce")
-        c2.metric("Total PnL", metric_number(float(pnl.sum())))
+    c1.metric("Сделок", len(df))
+    pnl = numeric_series(df, pcol)
+    if not pnl.empty:
+        c2.metric("PnL", metric_number(float(pnl.sum())))
         c3.metric("Win rate", f"{(pnl > 0).sum() / max(1, pnl.notna().sum()):.1%}")
-        c4.metric("Profit factor", metric_number(pnl[pnl > 0].sum() / abs(pnl[pnl < 0].sum()) if (pnl < 0).any() else None))
+        c4.metric("Profit factor", metric_number(float(pnl[pnl > 0].sum() / abs(pnl[pnl < 0].sum()))) if (pnl < 0).any() else "—")
     else:
-        c2.metric("Total PnL", "—")
+        c2.metric("PnL", "—")
         c3.metric("Win rate", "—")
         c4.metric("Profit factor", "—")
 
     if pcol and px is not None:
-        st.plotly_chart(px.histogram(df, x=pcol, nbins=80, title="PnL distribution"), use_container_width=True)
+        st.plotly_chart(px.histogram(df, x=pcol, nbins=80, title="Распределение PnL"), use_container_width=True)
     if hold_col and px is not None:
-        st.plotly_chart(px.histogram(df, x=hold_col, nbins=80, title="Hold seconds distribution"), use_container_width=True)
+        st.plotly_chart(px.histogram(df, x=hold_col, nbins=80, title="Время удержания, секунд"), use_container_width=True)
 
-    st.dataframe(df.head(500), use_container_width=True)
+    st.dataframe(df.head(500), use_container_width=True, hide_index=True)
 
 
 def render_latency_and_copy() -> None:
-    st.subheader("Latency / copy-stress")
+    st.subheader("⏱️ Latency / copy-stress")
+    st.caption("Copy-stress — это экономическая стресс-модель. Это не настоящий latency replay без price_series coverage.")
     for name in ["latency_sim", "copy_stress_model", "fee_adjusted_pnl"]:
         df = get_dataset_df(name)
-        with st.expander(name, expanded=not df.empty):
+        with st.expander(ru_label(name), expanded=not df.empty):
             if df.empty:
                 render_missing(name, DATASETS.get(name))
                 continue
-            st.dataframe(df.head(500), use_container_width=True)
+            st.dataframe(df.head(500), use_container_width=True, hide_index=True)
             scenario_col = find_col(df, ["scenario", "delay_label"])
             pcol = pnl_column(df)
             if scenario_col and pcol and px is not None:
                 plot_df = df.copy()
                 plot_df[pcol] = pd.to_numeric(plot_df[pcol], errors="coerce")
                 grouped = plot_df.groupby(scenario_col, as_index=False)[pcol].sum()
-                st.plotly_chart(px.bar(grouped, x=scenario_col, y=pcol, title=f"{name}: PnL by scenario"), use_container_width=True)
+                st.plotly_chart(px.bar(grouped, x=scenario_col, y=pcol, title=f"{ru_label(name)}: PnL по сценариям"), use_container_width=True)
 
 
 def render_entry_context() -> None:
-    st.subheader("Entry context / trigger tests")
+    st.subheader("🧠 Контекст входа и триггеры")
+    st.caption("Prediction claim разрешён только после сравнения entry points с control points и out-of-sample проверки.")
     for name in ["entry_context", "trigger_tests"]:
         df = get_dataset_df(name)
-        with st.expander(name, expanded=not df.empty):
+        with st.expander(ru_label(name), expanded=not df.empty):
             if df.empty:
                 render_missing(name, DATASETS.get(name))
                 continue
-            st.dataframe(df.head(500), use_container_width=True)
+            st.dataframe(df.head(500), use_container_width=True, hide_index=True)
+
+            coverage_col = find_col(df, ["feature_coverage_pct", "context_coverage", "coverage_pct"])
+            if coverage_col and px is not None:
+                st.plotly_chart(px.histogram(df, x=coverage_col, title="Покрытие признаков"), use_container_width=True)
 
 
 def markdown_artifacts_for_source() -> dict[str, str]:
     source = current_source()
-    if source == "Uploaded files":
+    if source == "Загруженные файлы":
         artifacts = uploaded_artifacts()
     elif source == "Supabase":
         artifacts = selected_supabase_artifacts()
@@ -673,39 +862,41 @@ def markdown_artifacts_for_source() -> dict[str, str]:
 
 
 def render_reports() -> None:
-    st.subheader("Markdown reports")
+    st.subheader("📄 Отчёты")
     markdown_artifacts = markdown_artifacts_for_source()
     if markdown_artifacts:
-        selected = st.selectbox("Artifact report", sorted(markdown_artifacts.keys()))
+        selected = st.selectbox("Отчёт из артефактов", sorted(markdown_artifacts.keys()), format_func=ru_label)
         st.markdown(markdown_artifacts[selected])
         return
 
     if not REPORTS_DIR.exists():
-        st.info("`reports/` пока не найден.")
+        st.info("Папка `reports/` пока не найдена.")
         return
     reports = sorted(REPORTS_DIR.glob("*.md"))
     if not reports:
         st.info("В `reports/` пока нет `.md` отчётов.")
         return
-    selected = st.selectbox("Report", [str(p.relative_to(ROOT)) for p in reports])
+    selected = st.selectbox("Отчёт", [str(p.relative_to(ROOT)) for p in reports])
     report_path = ROOT / selected
     st.markdown(report_path.read_text(encoding="utf-8", errors="replace"))
 
 
 def main() -> None:
-    st.title("membot forensic app")
-    st.caption("Read-only dashboard for Solana wallet replay outputs. Upload/save artifacts. No trading. No private keys.")
+    inject_css()
+    render_hero()
     render_sidebar()
 
-    tabs = st.tabs([
-        "Overview",
-        "Swaps",
-        "Paired trades",
-        "Latency / copy",
-        "Entry context",
-        "Reports",
-        "Upload / Supabase",
-    ])
+    tabs = st.tabs(
+        [
+            "🏠 Обзор",
+            "🔁 Свапы",
+            "🧾 FIFO",
+            "⏱️ Latency / copy",
+            "🧠 Entry context",
+            "📄 Отчёты",
+            "📤 Загрузка / Supabase",
+        ]
+    )
     with tabs[0]:
         render_overview()
     with tabs[1]:
