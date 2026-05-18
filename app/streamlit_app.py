@@ -11,12 +11,12 @@ import streamlit as st
 
 try:
     import plotly.express as px
-except Exception:  # pragma: no cover - app should still open without plotly
+except Exception:  # pragma: no cover
     px = None
 
 try:
     from supabase import create_client
-except Exception:  # pragma: no cover - Supabase is optional until configured
+except Exception:  # pragma: no cover
     create_client = None
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +30,7 @@ DATASETS = {
     "fee_adjusted_pnl": DATA_DIR / "fee_adjusted_pnl.csv",
     "copy_stress_model": DATA_DIR / "copy_stress_model.csv",
     "entry_context": DATA_DIR / "entry_context.csv",
+    "control_points": DATA_DIR / "control_points.csv",
     "trigger_tests": DATA_DIR / "trigger_tests.csv",
     "open_positions": DATA_DIR / "open_positions.csv",
 }
@@ -41,9 +42,11 @@ RU_DATASET_LABELS = {
     "fee_adjusted_pnl": "PnL с комиссиями",
     "copy_stress_model": "Copy-stress модель",
     "entry_context": "Контекст входа",
+    "control_points": "Контрольные точки",
     "trigger_tests": "Тесты триггеров",
     "open_positions": "Открытые позиции",
     "metrics_report": "Отчёт метрик",
+    "prebuy_trigger_report": "Отчёт pre-buy тестов",
     "entry_context_report": "Отчёт контекста входа",
     "readme": "README / заметки",
     "other": "Другое",
@@ -52,16 +55,11 @@ RU_DATASET_LABELS = {
 KNOWN_ARTIFACT_TYPES = [
     *DATASETS.keys(),
     "metrics_report",
+    "prebuy_trigger_report",
     "entry_context_report",
     "readme",
     "other",
 ]
-
-SOURCE_LABELS = {
-    "Локальные CSV": "local",
-    "Загруженные файлы": "upload",
-    "Supabase": "supabase",
-}
 
 SUPABASE_TABLE_RUNS = "dataset_runs"
 SUPABASE_TABLE_ARTIFACTS = "dataset_artifacts"
@@ -169,16 +167,14 @@ def secret_value(name: str) -> str | None:
             return str(value)
     except Exception:
         pass
-    value = os.environ.get(name)
-    return value or None
+    return os.environ.get(name) or None
 
 
 def require_app_access() -> bool:
     required_pin = secret_value("APP_ACCESS_PIN")
     if not required_pin:
         return False
-    entered_pin = st.session_state.get("app_access_pin", "")
-    return entered_pin == required_pin
+    return st.session_state.get("app_access_pin", "") == required_pin
 
 
 @st.cache_resource(show_spinner=False)
@@ -254,22 +250,16 @@ def artifact_to_dataframe(artifact: dict[str, Any] | None) -> pd.DataFrame:
     return dataframe_from_text(str(artifact.get("content_text") or ""))
 
 
-def local_dataset_status() -> pd.DataFrame:
-    rows = []
-    for name, path in DATASETS.items():
-        exists = path.exists()
-        rows.append(
-            {
-                "Артефакт": ru_label(name),
-                "Код": name,
-                "Файл": str(path.relative_to(ROOT)),
-                "Есть": exists,
-                "Байт": path.stat().st_size if exists else 0,
-                "Строк": len(load_csv(str(path))) if exists else 0,
-                "Источник": "локально",
-            }
-        )
-    return pd.DataFrame(rows)
+def uploaded_artifacts() -> dict[str, dict[str, Any]]:
+    return st.session_state.get("uploaded_artifacts", {})
+
+
+def selected_supabase_artifacts() -> dict[str, dict[str, Any]]:
+    return st.session_state.get("supabase_artifacts", {})
+
+
+def current_source() -> str:
+    return st.session_state.get("data_source", "Локальные CSV")
 
 
 def artifact_status(source: str, artifacts: dict[str, dict[str, Any]]) -> pd.DataFrame:
@@ -290,16 +280,22 @@ def artifact_status(source: str, artifacts: dict[str, dict[str, Any]]) -> pd.Dat
     return pd.DataFrame(rows)
 
 
-def uploaded_artifacts() -> dict[str, dict[str, Any]]:
-    return st.session_state.get("uploaded_artifacts", {})
-
-
-def selected_supabase_artifacts() -> dict[str, dict[str, Any]]:
-    return st.session_state.get("supabase_artifacts", {})
-
-
-def current_source() -> str:
-    return st.session_state.get("data_source", "Локальные CSV")
+def local_dataset_status() -> pd.DataFrame:
+    rows = []
+    for name, path in DATASETS.items():
+        exists = path.exists()
+        rows.append(
+            {
+                "Артефакт": ru_label(name),
+                "Код": name,
+                "Файл": str(path.relative_to(ROOT)),
+                "Есть": exists,
+                "Байт": path.stat().st_size if exists else 0,
+                "Строк": len(load_csv(str(path))) if exists else 0,
+                "Источник": "локально",
+            }
+        )
+    return pd.DataFrame(rows)
 
 
 def dataset_status() -> pd.DataFrame:
@@ -348,18 +344,6 @@ def metric_number(value: object, fallback: str = "—") -> str:
     return str(value)
 
 
-def render_missing(name: str, path: Path | None = None) -> None:
-    source = current_source()
-    label = ru_label(name)
-    if source == "Локальные CSV" and path is not None:
-        st.info(
-            f"`{label}` пока не найден: `{path.relative_to(ROOT)}`. "
-            "Запусти pipeline или загрузи CSV через вкладку `Загрузка / Supabase`."
-        )
-    else:
-        st.info(f"`{label}` пока не найден в источнике `{source}`.")
-
-
 def pnl_column(df: pd.DataFrame) -> str | None:
     return find_col(
         df,
@@ -374,8 +358,16 @@ def pnl_column(df: pd.DataFrame) -> str | None:
     )
 
 
-def time_column(df: pd.DataFrame) -> str | None:
-    return find_col(df, ["entry_time_utc", "block_time_utc", "timestamp", "buy_time", "sell_time"])
+def render_missing(name: str, path: Path | None = None) -> None:
+    source = current_source()
+    label = ru_label(name)
+    if source == "Локальные CSV" and path is not None:
+        st.info(
+            f"`{label}` пока не найден: `{path.relative_to(ROOT)}`. "
+            "Запусти pipeline или загрузи CSV через вкладку `Загрузка / Supabase`."
+        )
+    else:
+        st.info(f"`{label}` пока не найден в источнике `{source}`.")
 
 
 def list_supabase_runs(limit: int = 50) -> list[dict[str, Any]]:
@@ -509,12 +501,12 @@ def render_hero() -> None:
         """
         <div class="membot-hero">
           <h1>🧪 membot forensic</h1>
-          <p>Русский read-only dashboard для анализа Solana-кошелька: swaps → FIFO → latency → entry context.</p>
-          <p class="membot-muted">Это исследовательская панель. Она не торгует, не хранит приватные ключи и не объявляет “алгоритм раскрыт”.</p>
+          <p>Русский read-only dashboard: swaps → FIFO → entry context → controls → trigger tests.</p>
+          <p class="membot-muted">Панель не торгует, не хранит приватные ключи и не объявляет “алгоритм раскрыт”.</p>
           <div class="membot-badges">
             <span class="membot-badge good">✅ Read-only</span>
             <span class="membot-badge lock">🔐 Supabase через secrets</span>
-            <span class="membot-badge warn">⚠️ Метрики ≠ финальный claim</span>
+            <span class="membot-badge warn">⚠️ PASS ≠ торговый сигнал</span>
             <span class="membot-badge">📱 Mobile-first</span>
           </div>
         </div>
@@ -527,7 +519,6 @@ def render_sidebar() -> None:
     with st.sidebar:
         st.title("membot")
         st.caption("Панель управления источником данных")
-
         st.markdown("### Источник")
         st.selectbox(
             "Откуда читать данные",
@@ -572,12 +563,13 @@ def render_sidebar() -> None:
 
 def render_research_status() -> None:
     st.markdown("### Контур исследования")
-    cols = st.columns(4)
+    cols = st.columns(5)
     cards = [
         ("1", "Raw replay", "signatures → transactions → swaps", "ok"),
         ("2", "FIFO accounting", "paired trades / PnL / hold time", "ok"),
-        ("3", "Latency & copy", "stress ≠ real latency replay", "warn"),
-        ("4", "Entry context", "нужны controls до claims", "warn"),
+        ("3", "Entry context", "строго до покупки", "ok"),
+        ("4", "Controls", "защита от survivor bias", "warn"),
+        ("5", "Trigger tests", "PASS/PARTIAL/UNKNOWN/FAIL", "warn"),
     ]
     for col, (num, title, text, mode) in zip(cols, cards):
         klass = "membot-ok" if mode == "ok" else "membot-warn"
@@ -597,11 +589,11 @@ def render_quality_notes() -> None:
     with st.expander("Как читать панель — guardrails", expanded=False):
         st.markdown(
             """
-            - `wallet_swaps` показывает нормализованные buy/sell события, но не доказывает алгоритм.
-            - `trades_paired` — это FIFO-бухгалтерия, а не предсказание покупки.
-            - `copy_stress_model` — стресс-модель комиссий/проскальзывания, не настоящий latency replay.
-            - `entry_context` становится сильным только вместе с `control_points` и out-of-sample проверкой.
-            - Любой `UNKNOWN` лучше, чем красивый ложный вывод.
+            - `entry_context` считается строго до точки входа.
+            - `control_points` нужны, чтобы не принять survivor bias за edge.
+            - `trigger_tests` показывает статистическое разделение, но не даёт торговый сигнал.
+            - `PASS` означает “кандидат прошёл текущий тест”, а не “покупать”.
+            - `UNKNOWN` лучше, чем красивый ложный вывод.
             """
         )
 
@@ -659,7 +651,6 @@ def render_upload_and_save() -> None:
                 "metadata": {"uploaded_via": "streamlit_app", "ui_language": "ru"},
                 "bytes": len(data),
             }
-
         st.session_state["uploaded_artifacts"] = parsed
     elif not uploaded_artifacts():
         st.info("Файлы ещё не загружены.")
@@ -724,33 +715,26 @@ def render_overview() -> None:
 
     swaps = get_dataset_df("wallet_swaps")
     paired = get_dataset_df("trades_paired")
+    entry = get_dataset_df("entry_context")
+    controls = get_dataset_df("control_points")
+    tests = get_dataset_df("trigger_tests")
 
     st.subheader("🧭 Быстрый снимок pipeline")
-    k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Строк swaps", len(swaps) if not swaps.empty else 0)
-    k2.metric("FIFO-сделок", len(paired) if not paired.empty else 0)
-
-    side_col = find_col(swaps, ["side", "swap_side"])
-    if side_col and not swaps.empty:
-        side = swaps[side_col].astype(str).str.upper()
-        k3.metric("BUY", int((side == "BUY").sum()))
-        k4.metric("SELL", int((side == "SELL").sum()))
-    else:
-        k3.metric("BUY", "—")
-        k4.metric("SELL", "—")
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Swaps", len(swaps) if not swaps.empty else 0)
+    k2.metric("FIFO", len(paired) if not paired.empty else 0)
+    k3.metric("Entries", len(entry) if not entry.empty else 0)
+    k4.metric("Controls", len(controls) if not controls.empty else 0)
+    k5.metric("Features tested", len(tests) if not tests.empty else 0)
 
     pcol = pnl_column(paired)
     if pcol and not paired.empty:
         pnl = pd.to_numeric(paired[pcol], errors="coerce")
         wins = (pnl > 0).sum()
-        total = pnl.sum()
         m1, m2, m3 = st.columns(3)
-        m1.metric("PnL FIFO", metric_number(float(total)))
+        m1.metric("PnL FIFO", metric_number(float(pnl.sum())))
         m2.metric("Win rate", f"{wins / max(1, pnl.notna().sum()):.1%}")
-        if (pnl < 0).any():
-            m3.metric("Profit factor", metric_number(float(pnl[pnl > 0].sum() / abs(pnl[pnl < 0].sum()))))
-        else:
-            m3.metric("Profit factor", "—")
+        m3.metric("Profit factor", metric_number(float(pnl[pnl > 0].sum() / abs(pnl[pnl < 0].sum()))) if (pnl < 0).any() else "—")
 
     render_research_status()
     render_quality_notes()
@@ -831,19 +815,113 @@ def render_latency_and_copy() -> None:
 
 
 def render_entry_context() -> None:
-    st.subheader("🧠 Контекст входа и триггеры")
+    st.subheader("🧠 Контекст входа и control points")
     st.caption("Prediction claim разрешён только после сравнения entry points с control points и out-of-sample проверки.")
-    for name in ["entry_context", "trigger_tests"]:
-        df = get_dataset_df(name)
+
+    entry = get_dataset_df("entry_context")
+    controls = get_dataset_df("control_points")
+
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Entry points", len(entry) if not entry.empty else 0)
+    c2.metric("Control points", len(controls) if not controls.empty else 0)
+    ratio = (len(controls) / len(entry)) if not entry.empty else 0
+    c3.metric("Controls / entry", metric_number(float(ratio)) if ratio else "—")
+
+    for name, df in [("entry_context", entry), ("control_points", controls)]:
         with st.expander(ru_label(name), expanded=not df.empty):
             if df.empty:
                 render_missing(name, DATASETS.get(name))
                 continue
+            status_col = find_col(df, ["context_status", "status"])
+            quality_col = find_col(df, ["control_quality", "control_type"])
+            coverage_col = find_col(df, ["feature_coverage_pct", "coverage_pct"])
+
+            if status_col and px is not None:
+                st.plotly_chart(px.histogram(df, x=status_col, title=f"{ru_label(name)}: status"), use_container_width=True)
+            if quality_col and px is not None:
+                st.plotly_chart(px.histogram(df, x=quality_col, title="Качество control points"), use_container_width=True)
+            if coverage_col and px is not None:
+                plot_df = df.copy()
+                plot_df[coverage_col] = pd.to_numeric(plot_df[coverage_col], errors="coerce")
+                st.plotly_chart(px.histogram(plot_df, x=coverage_col, title="Покрытие признаков"), use_container_width=True)
+
             st.dataframe(df.head(500), use_container_width=True, hide_index=True)
 
-            coverage_col = find_col(df, ["feature_coverage_pct", "context_coverage", "coverage_pct"])
-            if coverage_col and px is not None:
-                st.plotly_chart(px.histogram(df, x=coverage_col, title="Покрытие признаков"), use_container_width=True)
+
+def render_trigger_tests() -> None:
+    st.subheader("🧪 Тесты pre-buy триггеров")
+    st.caption("Сравнение entry points vs matched control points. PASS здесь — кандидат на дальнейшую проверку, не торговый сигнал.")
+
+    df = get_dataset_df("trigger_tests")
+    if df.empty:
+        render_missing("trigger_tests", DATASETS.get("trigger_tests"))
+        st.markdown(
+            """
+            Минимальный запуск:
+            ```bash
+            python scripts/18_build_entry_context.py
+            python scripts/19_build_control_points.py
+            python scripts/20_test_entry_triggers.py
+            ```
+            """
+        )
+        return
+
+    status_col = find_col(df, ["status", "verdict"])
+    auc_col = find_col(df, ["signal_auc", "auc"])
+    effect_col = find_col(df, ["effect_size_cohens_d", "effect_size"])
+    family_col = find_col(df, ["family"])
+
+    statuses = df[status_col].astype(str).str.upper() if status_col else pd.Series(dtype=str)
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("PASS", int((statuses == "PASS").sum()) if status_col else 0)
+    c2.metric("PARTIAL", int((statuses == "PARTIAL").sum()) if status_col else 0)
+    c3.metric("UNKNOWN", int((statuses == "UNKNOWN").sum()) if status_col else 0)
+    c4.metric("FAIL", int((statuses == "FAIL").sum()) if status_col else 0)
+
+    if status_col and px is not None:
+        st.plotly_chart(px.histogram(df, x=status_col, title="Статус признаков"), use_container_width=True)
+    if family_col and status_col and px is not None:
+        st.plotly_chart(px.histogram(df, x=family_col, color=status_col, title="Статусы по семействам"), use_container_width=True)
+
+    if auc_col and effect_col and px is not None:
+        plot_df = df.copy()
+        plot_df[auc_col] = pd.to_numeric(plot_df[auc_col], errors="coerce")
+        plot_df[effect_col] = pd.to_numeric(plot_df[effect_col], errors="coerce")
+        st.plotly_chart(
+            px.scatter(
+                plot_df,
+                x=auc_col,
+                y=effect_col,
+                color=status_col if status_col else None,
+                hover_name="feature" if "feature" in plot_df.columns else ("feature_id" if "feature_id" in plot_df.columns else None),
+                title="Signal AUC vs effect size",
+            ),
+            use_container_width=True,
+        )
+
+    with st.expander("Лучшие кандидаты", expanded=True):
+        sort_cols = []
+        if status_col:
+            order = {"PASS": 0, "PARTIAL": 1, "UNKNOWN": 2, "FAIL": 3, "NO_SIGNAL": 4}
+            df = df.assign(_status_order=df[status_col].astype(str).str.upper().map(order).fillna(9))
+            sort_cols.append("_status_order")
+        if auc_col:
+            df[auc_col] = pd.to_numeric(df[auc_col], errors="coerce")
+            sort_cols.append(auc_col)
+        show = df.sort_values(sort_cols, ascending=[True, False][: len(sort_cols)]) if sort_cols else df
+        st.dataframe(show.drop(columns=[c for c in ["_status_order"] if c in show.columns]).head(100), use_container_width=True, hide_index=True)
+
+    with st.expander("Guardrails", expanded=False):
+        st.markdown(
+            """
+            - `PASS` = текущие controls отделяются от entries по этому признаку.
+            - `PARTIAL` = слабый кандидат, нужно больше данных.
+            - `UNKNOWN` = мало строк или слабое покрытие.
+            - `FAIL` / `NO_SIGNAL` = разделения в текущем sample нет.
+            - Ни один статус не создаёт `BUY`/`STRONG_BUY` без OOS.
+            """
+        )
 
 
 def markdown_artifacts_for_source() -> dict[str, str]:
@@ -893,6 +971,7 @@ def main() -> None:
             "🧾 FIFO",
             "⏱️ Latency / copy",
             "🧠 Entry context",
+            "🧪 Trigger tests",
             "📄 Отчёты",
             "📤 Загрузка / Supabase",
         ]
@@ -908,8 +987,10 @@ def main() -> None:
     with tabs[4]:
         render_entry_context()
     with tabs[5]:
-        render_reports()
+        render_trigger_tests()
     with tabs[6]:
+        render_reports()
+    with tabs[7]:
         render_upload_and_save()
 
 
