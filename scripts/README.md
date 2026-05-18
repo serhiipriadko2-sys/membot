@@ -28,6 +28,23 @@ before proceeding. See `docs/RPC_PROVIDER_STRATEGY.md`.
 13_copy_stress_model.py
 14_backtest_report.py
 16_reconcile_open_positions_fifo.py
+18_build_entry_context.py   # Build leakage-safe 30 winner / 30 loser pre-entry sample
+```
+
+## Pre-entry context study
+
+`18_build_entry_context.py` creates `data/processed/entry_context.csv` from
+existing local artifacts. It does not perform RPC calls and does not fabricate
+market-wide metrics. Missing external market context is marked `UNKNOWN`.
+
+Default run:
+
+```bash
+python scripts/18_build_entry_context.py --sample-winners 30 --sample-losers 30
+```
+
+See `docs/ENTRY_CONTEXT_PROTOCOL.md` for leakage rules and current limitations.
+
 ```
 
 ## Principles
