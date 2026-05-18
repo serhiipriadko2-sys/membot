@@ -50,6 +50,46 @@ Default sample:
 30 winners + 30 losers
 ```
 
+## Feature metadata
+
+Every entry-context row includes machine-readable metadata:
+
+- `feature_family` — semicolon-separated families observed from available data.
+  Current wallet-derived families: `wallet_flow`, `price_action`, `repeat_wave`,
+  or `none`.
+- `feature_source` — concrete local sources used for known features, such as
+  `wallet_swaps` or `wallet_swaps;price_series`.
+- `feature_coverage_pct` — percent of expected feature fields populated with
+  non-UNKNOWN values.
+- `confidence` — `medium` for wallet price + swap coverage, `low` for swap-only,
+  `unknown` when no pre-entry coverage exists.
+
+## Control points
+
+`scripts/19_build_control_points.py` creates matched controls from local data:
+
+```text
+data/processed/entry_context.csv
+data/processed/wallet_swaps.csv
+data/processed/price_series.csv
+```
+
+Default output:
+
+```text
+data/processed/control_points.csv
+```
+
+Default controls are same-token pre-entry offsets:
+
+```text
+-300s, -120s, -60s before entry
+```
+
+Post-entry controls are excluded unless `--include-after` is explicitly passed.
+Rows with post-entry controls are marked `leakage_guard_ok=false` and must not be
+used for leakage-safe predictor claims.
+
 ## Coverage semantics
 
 - `market_coverage=wallet_only` means no Dune/Helius/getBlock market-wide
