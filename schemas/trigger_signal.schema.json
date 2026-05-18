@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Trigger Signal",
+  "type": "object",
+  "required": ["token_mint", "action", "composite_score", "confidence", "reason_codes"],
+  "properties": {
+    "token_mint": {"type": "string"},
+    "action": {"enum": ["STRONG_BUY", "BUY", "WATCH", "NO_ENTRY", "AVOID"]},
+    "composite_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 100},
+    "position_size_pct": {"type": "number", "minimum": 0},
+    "risk_factors": {"type": "array", "items": {"type": "string"}},
+    "reason_codes": {"type": "array", "items": {"type": "string"}},
+    "component_scores": {"type": "object"}
+  }
+}

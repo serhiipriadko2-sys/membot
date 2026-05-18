@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reject Reason Row",
+  "type": "object",
+  "required": ["token_mint", "decision", "reason_code", "detected_at"],
+  "properties": {
+    "token_mint": {"type": "string"},
+    "decision": {"const": "AVOID"},
+    "reason_code": {"enum": ["LOW_LIQUIDITY", "HIGH_CONCENTRATION", "AUTHORITY_NOT_REVOKED", "NO_CLUSTER_SUPPORT", "CROSS_CHAIN_UNVERIFIED", "EXECUTION_DECAY_HIGH", "LOW_FEATURE_COVERAGE"]},
+    "detected_at": {"type": "integer"},
+    "evidence": {"type": "object"}
+  }
+}

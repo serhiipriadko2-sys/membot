@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cluster Context Row",
+  "type": "object",
+  "required": ["entry_signature", "token_mint", "cluster_presence_score", "cluster_quality_score", "cluster_toxicity_score", "context_status"],
+  "properties": {
+    "entry_signature": {"type": "string"},
+    "token_mint": {"type": "string"},
+    "cluster_wallet_count_30s": {"type": "number"},
+    "cluster_temporal_spread_seconds": {"type": "number"},
+    "cluster_presence_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "cluster_quality_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "cluster_toxicity_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "cluster_lead_time_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "cluster_exit_pressure_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "funding_source_similarity": {"type": "number", "minimum": 0, "maximum": 1},
+    "position_size_similarity": {"type": "number", "minimum": 0, "maximum": 1},
+    "route_similarity": {"type": "number", "minimum": 0, "maximum": 1},
+    "context_status": {"enum": ["PASS", "PARTIAL", "UNKNOWN", "FAIL"]}
+  }
+}
