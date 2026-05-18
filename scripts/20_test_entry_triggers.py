@@ -81,9 +81,7 @@ def as_float_or_none(value: Any) -> float | None:
 
 
 def transform_direction(values: list[float], direction: str) -> list[float]:
-    if direction == "lower":
-        return [-v for v in values]
-    return values
+    return [-v for v in values] if direction == "lower" else values
 
 
 def mean(values: list[float]) -> float:
@@ -100,9 +98,13 @@ def stddev(values: list[float]) -> float:
 def pooled_effect_size(xs: list[float], ys: list[float]) -> float:
     if not xs or not ys:
         return 0.0
-    sx = stddev(xs)
-    sy = stddev(ys)
-    pooled = math.sqrt(((sx * sx) + (sy * sy)) / 2)
+    nx, ny = len(xs), len(ys)
+    sx, sy = stddev(xs), stddev(ys)
+    dof = nx + ny - 2
+    if dof > 0:
+        pooled = math.sqrt(((nx - 1) * sx * sx + (ny - 1) * sy * sy) / dof)
+    else:
+        pooled = math.sqrt((sx * sx + sy * sy) / 2)
     if pooled == 0:
         diff = mean(xs) - mean(ys)
         if diff > 0:
@@ -137,9 +139,7 @@ def bootstrap_median_diff(xs: list[float], ys: list[float], iters: int = DEFAULT
         sy = [ys[rng.randrange(len(ys))] for _ in ys]
         diffs.append(float(median(sx) - median(sy)))
     diffs.sort()
-    lo = diffs[int(0.025 * (len(diffs) - 1))]
-    hi = diffs[int(0.975 * (len(diffs) - 1))]
-    return lo, hi
+    return diffs[int(0.025 * (len(diffs) - 1))], diffs[int(0.975 * (len(diffs) - 1))]
 
 
 def precision_at_k(xs: list[float], ys: list[float], k: int = DEFAULT_TOP_K) -> tuple[float, float]:
@@ -167,12 +167,7 @@ def verdict_for(coverage: float, effect: float, delta: float, ci_low: float, ci_
 
 
 def collect_values(rows: list[dict[str, str]], feature_id: str) -> list[float]:
-    values: list[float] = []
-    for row in rows:
-        value = as_float_or_none(row.get(feature_id))
-        if value is not None:
-            values.append(value)
-    return values
+    return [value for row in rows if (value := as_float_or_none(row.get(feature_id))) is not None]
 
 
 def feature_known_count(rows: list[dict[str, str]], feature_id: str) -> int:
@@ -196,9 +191,8 @@ def build_test_row(
     raw_ys = collect_values(group_b_rows, feature_id)
     xs = transform_direction(raw_xs, direction)
     ys = transform_direction(raw_ys, direction)
-    known = feature_known_count(group_a_rows, feature_id) + feature_known_count(group_b_rows, feature_id)
     total = len(group_a_rows) + len(group_b_rows)
-    coverage = (known / total * 100) if total else 0.0
+    coverage = (feature_known_count(group_a_rows, feature_id) + feature_known_count(group_b_rows, feature_id)) / total * 100 if total else 0.0
     effect = pooled_effect_size(xs, ys)
     delta = cliffs_delta(xs, ys)
     ci_low, ci_high = bootstrap_median_diff(xs, ys, bootstrap_iters)
@@ -236,14 +230,6 @@ def strip_scalar(value: str) -> str:
 
 
 def load_manifest(path: Path | None) -> list[dict[str, str]]:
-    """Load a tiny YAML subset used by configs/prebuy_feature_manifest.yaml.
-
-    The parser is intentionally small to avoid adding PyYAML. It supports lists
-    of mappings with scalar values:
-
-    - feature_id: wallet_buy_count_30s
-      family: wallet_flow
-    """
     if path is None or not path.exists():
         return DEFAULT_FEATURES
     features: list[dict[str, str]] = []
@@ -269,7 +255,7 @@ def load_manifest(path: Path | None) -> list[dict[str, str]]:
             current[key.strip()] = strip_scalar(value)
     if current:
         features.append(current)
-    cleaned = [f for f in features if f.get("feature_id")]
+    cleaned = [feature for feature in features if feature.get("feature_id")]
     return cleaned or DEFAULT_FEATURES
 
 
@@ -284,49 +270,21 @@ def build_trigger_tests(
     test_id = 0
     for feature in features:
         test_id += 1
-        tests.append(
-            build_test_row(
-                test_id,
-                "entry_vs_control",
-                feature,
-                entry_rows,
-                control_rows,
-                "entry",
-                "control",
-                bootstrap_iters,
-                top_k,
-            )
-        )
-
+        tests.append(build_test_row(test_id, "entry_vs_control", feature, entry_rows, control_rows, "entry", "control", bootstrap_iters, top_k))
     winners = [row for row in entry_rows if str(row.get("sample_class", "")).lower() == "winner" or str(row.get("label_win", "")).lower() == "true"]
     losers = [row for row in entry_rows if str(row.get("sample_class", "")).lower() == "loser" or str(row.get("label_win", "")).lower() == "false"]
     if winners and losers:
         for feature in features:
             test_id += 1
-            tests.append(
-                build_test_row(
-                    test_id,
-                    "winner_vs_loser",
-                    feature,
-                    winners,
-                    losers,
-                    "winner",
-                    "loser",
-                    bootstrap_iters,
-                    top_k,
-                )
-            )
+            tests.append(build_test_row(test_id, "winner_vs_loser", feature, winners, losers, "winner", "loser", bootstrap_iters, top_k))
     return tests
 
 
 def render_report(rows: list[dict[str, Any]], entry_count: int, control_count: int) -> str:
     verdict_counts: dict[str, int] = {}
     for row in rows:
-        verdict_counts[str(row.get("verdict", "UNKNOWN"))] = verdict_counts.get(str(row.get("verdict", "UNKNOWN")), 0) + 1
-    by_scope: dict[str, list[dict[str, Any]]] = {}
-    for row in rows:
-        by_scope.setdefault(str(row.get("test_scope", "unknown")), []).append(row)
-
+        verdict = str(row.get("verdict", "UNKNOWN"))
+        verdict_counts[verdict] = verdict_counts.get(verdict, 0) + 1
     lines = [
         "# Pre-buy Trigger Test Report",
         "",
@@ -342,25 +300,6 @@ def render_report(rows: list[dict[str, Any]], entry_count: int, control_count: i
     ]
     for verdict in sorted(verdict_counts):
         lines.append(f"- `{verdict}`: `{verdict_counts[verdict]}`")
-    lines.extend(["", "## Top rows by scope", ""])
-    for scope, scoped_rows in sorted(by_scope.items()):
-        lines.append(f"### {scope}")
-        lines.append("")
-        lines.append("| Feature | Verdict | Coverage | Effect | Cliff's delta | AUC | Precision@K |")
-        lines.append("|---|---:|---:|---:|---:|---:|---:|")
-        scoped_rows = sorted(scoped_rows, key=lambda r: (r.get("verdict") != "PASS", r.get("verdict") != "PARTIAL", -float(r.get("auc", 0) or 0)))
-        for row in scoped_rows[:10]:
-            lines.append(
-                f"| `{row['feature_id']}` | {row['verdict']} | {row['coverage_pct']} | {row['effect_size']} | {row['cliffs_delta']} | {row['auc']} | {row['precision_at_k']} |"
-            )
-        lines.append("")
-    lines.extend([
-        "## Interpretation discipline",
-        "",
-        "- `PASS` here means a feature separates the tested groups under current local data, not that a tradable strategy is proven.",
-        "- `PARTIAL` means directional separation exists but still needs broader coverage and OOS replay.",
-        "- `NO_SIGNAL` / `UNKNOWN` must not be promoted into a predictor claim.",
-    ])
     return "\n".join(lines) + "\n"
 
 
@@ -378,16 +317,13 @@ def main() -> None:
     ensure_dirs()
     entry_rows = read_csv(Path(args.entry_context))
     control_rows = read_csv(Path(args.control_points))
-    manifest_path = Path(args.manifest) if args.manifest else None
-    features = load_manifest(manifest_path)
+    features = load_manifest(Path(args.manifest) if args.manifest else None)
     rows = build_trigger_tests(entry_rows, control_rows, features, args.bootstrap_iters, args.top_k)
     write_csv(Path(args.output), rows, TEST_FIELDNAMES)
-    report = render_report(rows, len(entry_rows), len(control_rows))
     report_path = Path(args.report)
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(report, encoding="utf-8")
+    report_path.write_text(render_report(rows, len(entry_rows), len(control_rows)), encoding="utf-8")
     print(f"[OK] wrote {len(rows)} trigger tests to {args.output}")
-    print(f"[OK] wrote report to {args.report}")
 
 
 if __name__ == "__main__":

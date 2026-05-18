@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject-first trigger orchestration system v0.1.
+"""Reject-first trigger orchestration system v0.2.
 
 Scoring is allowed only after SafetyGate. This module is a research contract,
 not a production trading bot.
@@ -7,7 +7,7 @@ not a production trading bot.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import Any
 
 
@@ -78,7 +78,7 @@ class TriggerOrchestrator:
         self.token_cache: dict[str, TokenMetrics] = {}
         self.market_context: MarketContext | None = None
         self.cross_chain_monitor: Any | None = self.config.get("cross_chain_monitor")
-        self.active_clusters: dict[str, dict[str, Any]] = {}
+        self.active_clusters: dict[str, Any] = {}
         self.signal_history: list[TriggerSignal] = []
 
     def _default_config(self) -> dict[str, Any]:
@@ -90,6 +90,7 @@ class TriggerOrchestrator:
                 "min_liquidity_usd": 5000,
                 "max_top10_holder_pct": 60,
                 "require_cluster_support": True,
+                "require_cross_chain_verified": False,
             },
             "position_sizing": {"strong_buy": 3.0, "buy": 2.0, "watch": 1.0, "avoid": 0.0},
         }
@@ -100,7 +101,7 @@ class TriggerOrchestrator:
     def update_market_context(self, context: MarketContext) -> None:
         self.market_context = context
 
-    def update_cluster_data(self, cluster_id: str, cluster_data: dict[str, Any]) -> None:
+    def update_cluster_data(self, cluster_id: str, cluster_data: Any) -> None:
         self.active_clusters[cluster_id] = cluster_data
 
     def calculate_pecs_score(self, token: TokenMetrics) -> float:
@@ -118,12 +119,36 @@ class TriggerOrchestrator:
         liq_ratio = token.liquidity_usd / max(1.0, token.market_cap_usd)
         return min(100.0, liq_ratio * 500.0)
 
+    def _cluster_dict(self, cluster: Any) -> dict[str, Any]:
+        if isinstance(cluster, dict):
+            return cluster
+        if is_dataclass(cluster):
+            return asdict(cluster)
+        return {
+            key: getattr(cluster, key)
+            for key in dir(cluster)
+            if not key.startswith("_") and not callable(getattr(cluster, key))
+        }
+
+    def _cluster_matches_token(self, cluster: Any, token_mint: str) -> bool:
+        data = self._cluster_dict(cluster)
+        tokens = data.get("tokens") or data.get("token_mints") or data.get("mints")
+        if tokens is None:
+            return False
+        if isinstance(tokens, str):
+            tokens = [tokens]
+        return token_mint in set(tokens)
+
     def calculate_cluster_score(self, token: TokenMetrics) -> float:
-        clusters = [c for c in self.active_clusters.values() if token.mint in c.get("tokens", [token.mint])]
+        clusters = [
+            self._cluster_dict(cluster)
+            for cluster in self.active_clusters.values()
+            if self._cluster_matches_token(cluster, token.mint)
+        ]
         if not clusters:
             return float(token.metadata.get("cluster_score", 0.0))
-        best = max(clusters, key=lambda c: c.get("cluster_quality_score", 0) - c.get("cluster_toxicity_score", 0))
-        return max(0.0, min(100.0, best.get("cluster_quality_score", 0.0) - best.get("cluster_toxicity_score", 0.0)))
+        best = max(clusters, key=lambda c: float(c.get("cluster_quality_score", 0.0)) - float(c.get("cluster_toxicity_score", 0.0)))
+        return max(0.0, min(100.0, float(best.get("cluster_quality_score", 0.0)) - float(best.get("cluster_toxicity_score", 0.0))))
 
     def calculate_cross_chain_score(self, token: TokenMetrics) -> float:
         if self.cross_chain_monitor is not None:
@@ -150,7 +175,7 @@ class TriggerOrchestrator:
             reasons.append("AUTHORITY_NOT_REVOKED")
         if self.thresholds.get("require_cluster_support", True) and cluster_score < 30:
             reasons.append("NO_CLUSTER_SUPPORT")
-        if not cross_chain_verified:
+        if self.thresholds.get("require_cross_chain_verified", False) and not cross_chain_verified:
             reasons.append("CROSS_CHAIN_UNVERIFIED")
         if token.metadata.get("execution_decay_risk") == "HIGH":
             reasons.append("EXECUTION_DECAY_HIGH")
@@ -162,19 +187,19 @@ class TriggerOrchestrator:
         token = self.token_cache.get(mint)
         if token is None:
             return None
-        pecs = self.calculate_pecs_score(token)
-        tma = self.calculate_tma_score(token)
-        lsa = self.calculate_lsa_score(token)
-        cluster = self.calculate_cluster_score(token)
-        cross_chain = self.calculate_cross_chain_score(token)
-        cross_chain_verified = self.cross_chain_monitor is not None
-        safety_ok, reasons = self._safety_gate(token, cluster, cross_chain_verified)
-        scores = {"pecs": pecs, "tma": tma, "lsa": lsa, "cluster": cluster, "cross_chain": cross_chain}
+        scores = {
+            "pecs": self.calculate_pecs_score(token),
+            "tma": self.calculate_tma_score(token),
+            "lsa": self.calculate_lsa_score(token),
+            "cluster": self.calculate_cluster_score(token),
+            "cross_chain": self.calculate_cross_chain_score(token),
+        }
+        safety_ok, reasons = self._safety_gate(token, scores["cluster"], self.cross_chain_monitor is not None)
         if not safety_ok:
             signal = TriggerSignal(mint, "AVOID", 0.0, 0.0, 0.0, reasons, reasons, scores, [{"type": "safety_gate", "positive": False}])
             self.signal_history.append(signal)
             return signal
-        composite = sum(scores[k] * self.weights[k] for k in self.weights)
+        composite = sum(scores[key] * self.weights.get(key, 0.0) for key in scores)
         if composite >= 80:
             action, size = "STRONG_BUY", self.config["position_sizing"]["strong_buy"]
         elif composite >= 70:
