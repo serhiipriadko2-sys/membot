@@ -44,7 +44,15 @@ app/streamlit_app.py
 
 If future versions need RPC/API access inside the app, add secrets in Streamlit Cloud settings, not in GitHub.
 
-Example secret names:
+Required for Supabase-backed artifact storage:
+
+```toml
+APP_ACCESS_PIN = "change-this-pin"
+SUPABASE_URL = "https://catntmobfcenkhkodnqv.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY = "paste-only-in-streamlit-cloud-secrets"
+```
+
+Optional read-only RPC/API examples for later versions:
 
 ```toml
 SOLANA_RPC_URL = "https://mainnet.helius-rpc.com/?api-key=..."
@@ -71,11 +79,49 @@ Then later update the app to read sample data when `data/processed` is empty.
 
 ### Option B — upload CSV through the app
 
-Add a Streamlit file uploader and parse CSV in memory. This is best for mobile if you can export files and upload them.
+Use the `Upload / Supabase` tab. It can parse CSV/MD/JSON/TXT in memory and show previews. This is best for mobile if you can export files and upload them.
 
-### Option C — database/object storage
+### Option C — Supabase artifact storage
 
-Store generated outputs in Supabase/Postgres or object storage, then let the app read from there. This is best for real ongoing mobile use.
+The project has these Postgres tables:
+
+```text
+public.dataset_runs
+public.dataset_artifacts
+```
+
+The app can save uploaded CSV/MD artifacts into Supabase and later reload them through the `Supabase` data source in the sidebar.
+
+## Supabase workflow from mobile
+
+1. Open the deployed Streamlit URL.
+2. Enter `APP_ACCESS_PIN` in the sidebar.
+3. Open `Upload / Supabase`.
+4. Upload one or more files:
+
+```text
+wallet_swaps.csv
+trades_paired.csv
+latency_sim.csv
+fee_adjusted_pnl.csv
+copy_stress_model.csv
+entry_context.csv
+trigger_tests.csv
+metrics_report.md
+```
+
+5. Check the preview.
+6. Fill wallet, run label, source, notes.
+7. Click `Save uploaded artifacts to Supabase`.
+8. Switch sidebar source to `Supabase` and select the saved run.
+
+## Supabase security notes
+
+- RLS is enabled on `dataset_runs` and `dataset_artifacts`.
+- The dashboard uses Supabase only server-side inside Streamlit.
+- Keep `SUPABASE_SERVICE_ROLE_KEY` only in Streamlit secrets.
+- `APP_ACCESS_PIN` is an extra app-level gate for public Streamlit URLs.
+- Do not open broad anon read policies until the dataset is intentionally public.
 
 ## Platform comparison
 
@@ -92,14 +138,21 @@ Store generated outputs in Supabase/Postgres or object storage, then let the app
 streamlit run app/streamlit_app.py
 ```
 
+## Current implementation
+
+```text
+- data source selector: Local CSV / Uploaded files / Supabase
+- upload controls for CSV/MD/JSON/TXT artifacts
+- save uploaded artifacts into Supabase dataset tables
+- reload saved runs from Supabase
+- render CSV dashboards and Markdown reports from Supabase
+```
+
 ## Next recommended implementation
 
 ```text
-1. Add sample_data/processed with scrubbed demo CSV fixtures.
-2. Add data source selector in Streamlit sidebar:
-   - local data/processed
-   - sample_data/processed
-   - uploaded CSV
-3. Add upload controls for wallet_swaps.csv and trades_paired.csv.
-4. Add read-only secrets support later.
+1. Add Streamlit smoke test or CI import check.
+2. Add Supabase artifact delete/archive action.
+3. Add sample_data/processed with scrubbed demo CSV fixtures.
+4. Add controlled server-side pipeline runner only after access/auth is stronger.
 ```
