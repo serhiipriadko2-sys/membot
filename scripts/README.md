@@ -45,8 +45,11 @@ python scripts/18_build_entry_context.py --sample-winners 30 --sample-losers 30
 
 See `docs/ENTRY_CONTEXT_PROTOCOL.md` for leakage rules and current limitations.
 
+```
+
 ## Principles
 
 - Script outputs write reproducible artifacts, not only console summaries.
 - No fake data: if an upstream step failed, downstream steps refuse to run.
 - All RPC settings come from `.env` (see `.env.example`).
+

@@ -1,0 +1,5 @@
+token,symbol,token_mint,balance,current_value_usd,liquidity_class
+Alpha,AAA,A_MINT,5,80,core_liquid_priced
+Beta,BBB,B_MINT,10,90,core_liquid_priced
+Gamma,CCC,C_MINT,3,15,micro_priced
+Delta,DDD,D_MINT,2,10,micro_priced

@@ -1,0 +1,5 @@
+wallet,signature,block_time,slot,token_mint,token_symbol,side,token_amount,usd_amount,sol_amount,price_usd,market_cap_at_trade,dex,fee_usd,fee_sol,source,parse_confidence
+7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5,buy_a_1,1710000000,100,A_MINT,AAA,BUY,10,100,0.5,10,50000,fixture,1,,fixture,high
+7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5,sell_a_1,1710000060,101,A_MINT,AAA,SELL,10,125,0.62,12.5,55000,fixture,2,,fixture,high
+7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5,buy_b_1,1710000100,102,B_MINT,BBB,BUY,20,200,1.0,10,80000,fixture,,,fixture,medium
+7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5,sell_b_1,1710000200,103,B_MINT,BBB,SELL,20,180,0.9,9,70000,fixture,,,fixture,medium
