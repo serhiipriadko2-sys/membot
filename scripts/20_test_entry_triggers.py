@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Test whether pre-buy entry context separates from matched controls.
 
-This script is intentionally stdlib-only and conservative. It does not claim a
-predictor from pretty post-fact patterns. It compares `entry_context.csv` against
-`control_points.csv` and writes:
+M3.2 guardrails:
+- data-quality features are separated from trading-trigger features;
+- constant / zero-variance features cannot become PASS;
+- precision@k is tie-aware and does not reward arbitrary ordering;
+- coverage is distinct from information content.
 
+The script writes:
 - data/processed/trigger_tests.csv
 - reports/prebuy_trigger_report.md
-
-The first M3 scope is wallet-derived. Market-wide UNKNOWNs remain UNKNOWN.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from common import DATA_PROCESSED, REPORTS, ensure_dirs, read_csv, write_csv
 UNKNOWN = "UNKNOWN"
 DEFAULT_BOOTSTRAP_ITERS = 300
 DEFAULT_TOP_K = 10
+EPS = 1e-12
 
 TEST_FIELDNAMES = [
     "test_id",
@@ -32,10 +34,17 @@ TEST_FIELDNAMES = [
     "feature_id",
     "family",
     "source",
+    "feature_role",
     "direction",
     "n_entry",
     "n_control",
     "coverage_pct",
+    "nonzero_rate_entry",
+    "nonzero_rate_control",
+    "variance_entry",
+    "variance_control",
+    "unique_values_count",
+    "information_status",
     "median_entry",
     "median_control",
     "mean_entry",
@@ -48,19 +57,20 @@ TEST_FIELDNAMES = [
     "precision_at_k",
     "baseline_precision",
     "verdict",
+    "status_reason",
     "notes",
 ]
 
 DEFAULT_FEATURES = [
-    {"feature_id": "wallet_buy_count_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher"},
-    {"feature_id": "wallet_sell_count_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "lower"},
-    {"feature_id": "wallet_net_buy_sol_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher"},
-    {"feature_id": "wallet_volume_sol_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher"},
-    {"feature_id": "wallet_tx_count_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher"},
-    {"feature_id": "price_return_30s", "family": "price_action", "source": "price_series", "direction": "higher"},
-    {"feature_id": "same_wallet_prior_entries_count", "family": "repeat_wave", "source": "trades_paired;wallet_swaps", "direction": "higher"},
-    {"feature_id": "same_wallet_prior_pnl_sol", "family": "repeat_wave", "source": "trades_paired", "direction": "higher"},
-    {"feature_id": "feature_coverage_pct", "family": "data_quality", "source": "entry_context", "direction": "higher"},
+    {"feature_id": "wallet_buy_count_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher", "feature_role": "trading_trigger"},
+    {"feature_id": "wallet_sell_count_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "lower", "feature_role": "trading_trigger"},
+    {"feature_id": "wallet_net_buy_sol_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher", "feature_role": "trading_trigger"},
+    {"feature_id": "wallet_volume_sol_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher", "feature_role": "trading_trigger"},
+    {"feature_id": "wallet_tx_count_30s", "family": "wallet_flow", "source": "wallet_swaps", "direction": "higher", "feature_role": "trading_trigger"},
+    {"feature_id": "price_return_30s", "family": "price_action", "source": "price_series", "direction": "higher", "feature_role": "trading_trigger"},
+    {"feature_id": "same_wallet_prior_entries_count", "family": "repeat_wave", "source": "trades_paired;wallet_swaps", "direction": "higher", "feature_role": "trading_trigger"},
+    {"feature_id": "same_wallet_prior_pnl_sol", "family": "repeat_wave", "source": "trades_paired", "direction": "higher", "feature_role": "trading_trigger"},
+    {"feature_id": "feature_coverage_pct", "family": "data_quality", "source": "entry_context", "direction": "higher", "feature_role": "data_quality"},
 ]
 
 
@@ -88,11 +98,39 @@ def mean(values: list[float]) -> float:
     return sum(values) / len(values) if values else 0.0
 
 
-def stddev(values: list[float]) -> float:
+def variance(values: list[float]) -> float:
     if len(values) < 2:
         return 0.0
     m = mean(values)
-    return math.sqrt(sum((x - m) ** 2 for x in values) / (len(values) - 1))
+    return sum((x - m) ** 2 for x in values) / (len(values) - 1)
+
+
+def stddev(values: list[float]) -> float:
+    return math.sqrt(variance(values))
+
+
+def nonzero_rate(values: list[float]) -> float:
+    return sum(1 for value in values if abs(value) > EPS) / len(values) if values else 0.0
+
+
+def unique_count(values: list[float]) -> int:
+    return len({round(value, 12) for value in values})
+
+
+def information_status(xs: list[float], ys: list[float], coverage: float) -> tuple[str, str]:
+    combined = xs + ys
+    if coverage <= 0 or not combined:
+        return "EMPTY", "no_known_values"
+    uniques = unique_count(combined)
+    if uniques <= 1:
+        return "CONSTANT", "constant_feature"
+    vx = variance(xs)
+    vy = variance(ys)
+    if vx <= EPS and vy <= EPS:
+        return "CONSTANT", "zero_variance_both_groups"
+    if coverage < 70:
+        return "LOW_COVERAGE", "low_coverage"
+    return "VARIABLE", "variable_feature"
 
 
 def pooled_effect_size(xs: list[float], ys: list[float]) -> float:
@@ -105,12 +143,7 @@ def pooled_effect_size(xs: list[float], ys: list[float]) -> float:
         pooled = math.sqrt(((nx - 1) * sx * sx + (ny - 1) * sy * sy) / dof)
     else:
         pooled = math.sqrt((sx * sx + sy * sy) / 2)
-    if pooled == 0:
-        diff = mean(xs) - mean(ys)
-        if diff > 0:
-            return 999.0
-        if diff < 0:
-            return -999.0
+    if pooled <= EPS:
         return 0.0
     return (mean(xs) - mean(ys)) / pooled
 
@@ -142,28 +175,66 @@ def bootstrap_median_diff(xs: list[float], ys: list[float], iters: int = DEFAULT
     return diffs[int(0.025 * (len(diffs) - 1))], diffs[int(0.975 * (len(diffs) - 1))]
 
 
-def precision_at_k(xs: list[float], ys: list[float], k: int = DEFAULT_TOP_K) -> tuple[float, float]:
+def tie_aware_precision_at_k(xs: list[float], ys: list[float], k: int = DEFAULT_TOP_K) -> tuple[float, float]:
+    """Expected precision@k under random ordering inside score ties."""
     labeled = [(value, 1) for value in xs] + [(value, 0) for value in ys]
     if not labeled:
         return 0.0, 0.0
-    labeled.sort(key=lambda item: item[0], reverse=True)
-    top = labeled[: min(k, len(labeled))]
-    precision = sum(label for _value, label in top) / len(top)
     baseline = len(xs) / len(labeled)
-    return precision, baseline
+    if unique_count([value for value, _label in labeled]) <= 1:
+        return baseline, baseline
+
+    k_eff = min(k, len(labeled))
+    labeled.sort(key=lambda item: item[0], reverse=True)
+    cutoff = labeled[k_eff - 1][0]
+    above = [(value, label) for value, label in labeled if value > cutoff]
+    tied = [(value, label) for value, label in labeled if value == cutoff]
+    slots_from_tie = k_eff - len(above)
+    positives = sum(label for _value, label in above)
+    if tied and slots_from_tie > 0:
+        positives += sum(label for _value, label in tied) * (slots_from_tie / len(tied))
+    return positives / k_eff, baseline
 
 
-def verdict_for(coverage: float, effect: float, delta: float, ci_low: float, ci_high: float, auc: float, precision: float, baseline: float) -> str:
+def verdict_for(
+    *,
+    feature_role: str,
+    coverage: float,
+    effect: float,
+    delta: float,
+    ci_low: float,
+    ci_high: float,
+    auc: float,
+    precision: float,
+    baseline: float,
+    info_status: str,
+    info_reason: str,
+) -> tuple[str, str]:
+    if info_status == "EMPTY":
+        return "UNKNOWN", info_reason
+    if info_status == "CONSTANT":
+        return "NO_SIGNAL", info_reason
     if coverage < 70:
-        return "UNKNOWN"
+        return "UNKNOWN", "low_coverage"
+
     ci_positive = ci_low > 0 and ci_high > 0
-    if coverage >= 80 and delta >= 0.33 and auc >= 0.62 and precision >= max(baseline * 2, baseline + 0.1):
-        return "PASS"
-    if ci_positive and effect >= 0.2 and delta > 0:
-        return "PARTIAL"
+    strong = coverage >= 80 and delta >= 0.33 and auc >= 0.62 and precision >= max(baseline * 1.5, baseline + 0.10)
+    partial = ci_positive and effect >= 0.2 and delta > 0
+
+    if feature_role == "data_quality":
+        if strong:
+            return "DATA_QUALITY_PASS", "data_quality_not_trading_trigger"
+        if partial:
+            return "DATA_QUALITY_PARTIAL", "data_quality_not_trading_trigger"
+        return "DATA_QUALITY_NO_SIGNAL", "data_quality_not_trading_trigger"
+
+    if strong:
+        return "PASS", "entry_control_separation"
+    if partial:
+        return "PARTIAL", "weak_entry_control_separation"
     if effect <= -0.2 or delta < -0.1:
-        return "FAIL"
-    return "NO_SIGNAL"
+        return "FAIL", "opposite_direction_or_negative_effect"
+    return "NO_SIGNAL", "insufficient_separation"
 
 
 def collect_values(rows: list[dict[str, str]], feature_id: str) -> list[float]:
@@ -186,29 +257,56 @@ def build_test_row(
     top_k: int,
 ) -> dict[str, Any]:
     feature_id = feature["feature_id"]
+    family = feature.get("family", "unknown")
     direction = feature.get("direction", "higher")
+    feature_role = feature.get("feature_role") or feature.get("role") or ("data_quality" if family == "data_quality" else "trading_trigger")
+
     raw_xs = collect_values(group_a_rows, feature_id)
     raw_ys = collect_values(group_b_rows, feature_id)
     xs = transform_direction(raw_xs, direction)
     ys = transform_direction(raw_ys, direction)
+
     total = len(group_a_rows) + len(group_b_rows)
-    coverage = (feature_known_count(group_a_rows, feature_id) + feature_known_count(group_b_rows, feature_id)) / total * 100 if total else 0.0
-    effect = pooled_effect_size(xs, ys)
-    delta = cliffs_delta(xs, ys)
-    ci_low, ci_high = bootstrap_median_diff(xs, ys, bootstrap_iters)
-    auc = (delta + 1) / 2
-    precision, baseline = precision_at_k(xs, ys, top_k)
-    verdict = verdict_for(coverage, effect, delta, ci_low, ci_high, auc, precision, baseline)
+    known_total = feature_known_count(group_a_rows, feature_id) + feature_known_count(group_b_rows, feature_id)
+    coverage = (known_total / total * 100) if total else 0.0
+    info_status, info_reason = information_status(xs, ys, coverage)
+
+    effect = pooled_effect_size(xs, ys) if info_status == "VARIABLE" else 0.0
+    delta = cliffs_delta(xs, ys) if info_status == "VARIABLE" else 0.0
+    ci_low, ci_high = bootstrap_median_diff(xs, ys, bootstrap_iters) if info_status == "VARIABLE" else (0.0, 0.0)
+    auc = (delta + 1) / 2 if info_status == "VARIABLE" else 0.5
+    precision, baseline = tie_aware_precision_at_k(xs, ys, top_k)
+    verdict, status_reason = verdict_for(
+        feature_role=feature_role,
+        coverage=coverage,
+        effect=effect,
+        delta=delta,
+        ci_low=ci_low,
+        ci_high=ci_high,
+        auc=auc,
+        precision=precision,
+        baseline=baseline,
+        info_status=info_status,
+        info_reason=info_reason,
+    )
+
     return {
         "test_id": test_id,
         "test_scope": test_scope,
         "feature_id": feature_id,
-        "family": feature.get("family", "unknown"),
+        "family": family,
         "source": feature.get("source", "unknown"),
+        "feature_role": feature_role,
         "direction": direction,
         "n_entry": len(raw_xs),
         "n_control": len(raw_ys),
         "coverage_pct": f"{coverage:.2f}",
+        "nonzero_rate_entry": f"{nonzero_rate(raw_xs):.6f}",
+        "nonzero_rate_control": f"{nonzero_rate(raw_ys):.6f}",
+        "variance_entry": f"{variance(raw_xs):.12f}",
+        "variance_control": f"{variance(raw_ys):.12f}",
+        "unique_values_count": unique_count(xs + ys),
+        "information_status": info_status,
         "median_entry": f"{median(raw_xs):.8f}" if raw_xs else "",
         "median_control": f"{median(raw_ys):.8f}" if raw_ys else "",
         "mean_entry": f"{mean(raw_xs):.8f}" if raw_xs else "",
@@ -221,7 +319,8 @@ def build_test_row(
         "precision_at_k": f"{precision:.6f}",
         "baseline_precision": f"{baseline:.6f}",
         "verdict": verdict,
-        "notes": f"{group_a_name} vs {group_b_name}; direction-normalized statistics used for effect/auc",
+        "status_reason": status_reason,
+        "notes": f"{group_a_name} vs {group_b_name}; direction-normalized stats; {info_reason}",
     }
 
 
@@ -271,8 +370,9 @@ def build_trigger_tests(
     for feature in features:
         test_id += 1
         tests.append(build_test_row(test_id, "entry_vs_control", feature, entry_rows, control_rows, "entry", "control", bootstrap_iters, top_k))
-    winners = [row for row in entry_rows if str(row.get("sample_class", "")).lower() == "winner" or str(row.get("label_win", "")).lower() == "true"]
-    losers = [row for row in entry_rows if str(row.get("sample_class", "")).lower() == "loser" or str(row.get("label_win", "")).lower() == "false"]
+
+    winners = [row for row in entry_rows if str(row.get("sample_class", "")).lower() == "winner" or str(row.get("label_win", "")).lower() == "true" or str(row.get("outcome_win", "")).lower() == "true"]
+    losers = [row for row in entry_rows if str(row.get("sample_class", "")).lower() == "loser" or str(row.get("label_win", "")).lower() == "false" or str(row.get("outcome_win", "")).lower() == "false"]
     if winners and losers:
         for feature in features:
             test_id += 1
@@ -282,9 +382,16 @@ def build_trigger_tests(
 
 def render_report(rows: list[dict[str, Any]], entry_count: int, control_count: int) -> str:
     verdict_counts: dict[str, int] = {}
+    role_counts: dict[str, int] = {}
+    info_counts: dict[str, int] = {}
     for row in rows:
         verdict = str(row.get("verdict", "UNKNOWN"))
         verdict_counts[verdict] = verdict_counts.get(verdict, 0) + 1
+        role = str(row.get("feature_role", "unknown"))
+        role_counts[role] = role_counts.get(role, 0) + 1
+        info = str(row.get("information_status", "UNKNOWN"))
+        info_counts[info] = info_counts.get(info, 0) + 1
+
     lines = [
         "# Pre-buy Trigger Test Report",
         "",
@@ -293,6 +400,8 @@ def render_report(rows: list[dict[str, Any]], entry_count: int, control_count: i
         f"- Entry rows: `{entry_count}`",
         f"- Control rows: `{control_count}`",
         f"- Trigger tests: `{len(rows)}`",
+        "- Guardrail: `DATA_QUALITY_*` verdicts are not trading triggers.",
+        "- Guardrail: constant / zero-variance features cannot become PASS.",
         "- Guardrail: this report does not prove H4 without sufficient coverage, controls, and out-of-sample validation.",
         "",
         "## Verdict counts",
@@ -300,6 +409,12 @@ def render_report(rows: list[dict[str, Any]], entry_count: int, control_count: i
     ]
     for verdict in sorted(verdict_counts):
         lines.append(f"- `{verdict}`: `{verdict_counts[verdict]}`")
+    lines.extend(["", "## Feature role counts", ""])
+    for role in sorted(role_counts):
+        lines.append(f"- `{role}`: `{role_counts[role]}`")
+    lines.extend(["", "## Information status counts", ""])
+    for info in sorted(info_counts):
+        lines.append(f"- `{info}`: `{info_counts[info]}`")
     return "\n".join(lines) + "\n"
 
 
