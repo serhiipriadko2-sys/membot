@@ -1,0 +1,91 @@
+name: Run forensic verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Number of signatures to fetch"
+        required: true
+        default: "600"
+      before:
+        description: "Optional signature cursor before"
+        required: false
+        default: ""
+      until:
+        description: "Optional signature cursor until"
+        required: false
+        default: ""
+
+jobs:
+  run-forensic-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TARGET_WALLET: 7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5
+      REQUEST_SLEEP_SECONDS: "0.15"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set RPC URL
+        run: |
+          if [ -n "${{ secrets.SOLANA_RPC_URL }}" ]; then
+            echo "SOLANA_RPC_URL=${{ secrets.SOLANA_RPC_URL }}" >> "$GITHUB_ENV"
+          else
+            echo "SOLANA_RPC_URL=https://api.mainnet-beta.solana.com" >> "$GITHUB_ENV"
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Fetch signatures
+        run: |
+          BEFORE="${{ github.event.inputs.before }}"
+          UNTIL="${{ github.event.inputs.until }}"
+          ARGS="--limit ${{ github.event.inputs.limit }}"
+          if [ -n "$BEFORE" ]; then ARGS="$ARGS --before $BEFORE"; fi
+          if [ -n "$UNTIL" ]; then ARGS="$ARGS --until $UNTIL"; fi
+          python scripts/01_fetch_signatures.py $ARGS
+
+      - name: Fetch transactions
+        run: python scripts/02_fetch_transactions.py
+
+      - name: Normalize swaps
+        run: python scripts/03_normalize_swaps.py
+
+      - name: Pair trades FIFO
+        run: python scripts/04_pair_trades.py
+
+      - name: Build daily PnL calendar
+        run: python scripts/31_build_daily_pnl_calendar.py
+
+      - name: Audit priority fees and Jito candidates
+        run: python scripts/32_audit_priority_fees_and_jito.py
+
+      - name: Test entry/exit hypotheses
+        run: python scripts/30_test_entry_exit_hypotheses.py
+        continue-on-error: true
+
+      - name: Upload forensic artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: forensic-verification-${{ github.run_id }}
+          if-no-files-found: warn
+          path: |
+            data/raw/signatures_raw.json
+            data/raw/transactions_raw.json
+            data/processed/wallet_swaps.csv
+            data/processed/trades_paired.csv
+            data/processed/daily_pnl_calendar.csv
+            data/processed/priority_fee_jito_audit.csv
+            data/processed/entry_exit_hypothesis_tests.csv
+            reports/daily_pnl_calendar_report.md
+            reports/priority_fee_jito_audit_report.md
+            reports/entry_exit_hypothesis_report.md
