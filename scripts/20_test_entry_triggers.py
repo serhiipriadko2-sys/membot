@@ -231,6 +231,10 @@ def build_test_row(
     }
 
 
+def strip_scalar(value: str) -> str:
+    return value.strip().strip("\"'")
+
+
 def load_manifest(path: Path | None) -> list[dict[str, str]]:
     """Load a tiny YAML subset used by configs/prebuy_feature_manifest.yaml.
 
@@ -258,11 +262,11 @@ def load_manifest(path: Path | None) -> list[dict[str, str]]:
             rest = stripped[1:].strip()
             if rest and ":" in rest:
                 key, value = rest.split(":", 1)
-                current[key.strip()] = value.strip().strip('"\'')
+                current[key.strip()] = strip_scalar(value)
             continue
         if current is not None and ":" in stripped:
             key, value = stripped.split(":", 1)
-            current[key.strip()] = value.strip().strip('"\'')
+            current[key.strip()] = strip_scalar(value)
     if current:
         features.append(current)
     cleaned = [f for f in features if f.get("feature_id")]
