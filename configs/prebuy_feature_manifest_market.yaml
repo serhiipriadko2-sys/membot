@@ -1,0 +1,96 @@
+features:
+  - feature_id: wallet_buy_count_30s
+    family: wallet_flow
+    source: wallet_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: wallet_sell_count_30s
+    family: wallet_flow
+    source: wallet_swaps
+    direction: lower
+    feature_role: trading_trigger
+  - feature_id: wallet_net_buy_sol_30s
+    family: wallet_flow
+    source: wallet_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: wallet_volume_sol_30s
+    family: wallet_flow
+    source: wallet_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: wallet_tx_count_30s
+    family: wallet_flow
+    source: wallet_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: price_return_30s
+    family: price_action_wallet_derived
+    source: price_series
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_buy_count_30s
+    family: market_flow
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_sell_count_30s
+    family: market_flow
+    source: market_same_token_swaps
+    direction: lower
+    feature_role: trading_trigger
+  - feature_id: market_tx_count_30s
+    family: market_flow
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_volume_usd_30s
+    family: market_flow
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_net_buy_usd_30s
+    family: market_flow
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_unique_buyers_30s
+    family: market_participation
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_unique_sellers_30s
+    family: market_participation
+    source: market_same_token_swaps
+    direction: lower
+    feature_role: trading_trigger
+  - feature_id: market_unique_traders_30s
+    family: market_participation
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_largest_buy_usd_30s
+    family: market_whale_pressure
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: market_price_return_30s
+    family: market_price_action
+    source: market_same_token_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: same_wallet_prior_entries_count
+    family: repeat_wave
+    source: trades_paired;wallet_swaps
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: same_wallet_prior_pnl_sol
+    family: repeat_wave
+    source: trades_paired
+    direction: higher
+    feature_role: trading_trigger
+  - feature_id: feature_coverage_pct
+    family: data_quality
+    source: entry_context
+    direction: higher
+    feature_role: data_quality
