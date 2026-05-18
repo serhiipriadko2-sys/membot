@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cross Chain Context Row",
+  "type": "object",
+  "required": ["timestamp", "target_chain", "combined_momentum", "signal_count", "context_status"],
+  "properties": {
+    "timestamp": {"type": "integer"},
+    "target_chain": {"type": "string"},
+    "combined_momentum": {"type": "number", "minimum": 0},
+    "signal_count": {"type": "integer", "minimum": 0},
+    "recommendation": {"type": "string"},
+    "bridge_inflow_usd_15m": {"type": "number"},
+    "bridge_outflow_usd_15m": {"type": "number"},
+    "cross_chain_attention_delta": {"type": "number"},
+    "context_status": {"enum": ["PASS", "PARTIAL", "UNKNOWN", "FAIL"]}
+  }
+}
