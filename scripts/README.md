@@ -39,6 +39,7 @@ before proceeding. See `docs/RPC_PROVIDER_STRATEGY.md`.
 26_build_market_controls.py      # Build market-wide matched controls
 27_enrich_entry_context_market.py # Join market context onto entry context
 28_build_helius_enrichment.py    # Parse local Helius enhanced tx export
+29_test_market_triggers.py       # Test market-wide context against control anchors
 ```
 
 ## Pre-entry context study
@@ -91,6 +92,7 @@ run:
 python scripts/25_build_market_context.py --include-controls
 python scripts/26_build_market_controls.py
 python scripts/27_enrich_entry_context_market.py
+python scripts/29_test_market_triggers.py
 ```
 
 Optional local Helius export parser:
@@ -104,6 +106,12 @@ No enrichment script stores API keys or performs live vendor API calls.
 
 See `docs/ENTRY_CONTEXT_PROTOCOL.md` and `docs/MARKET_WIDE_ENRICHMENT_PROTOCOL.md`
 for leakage rules, feature metadata, and market-wide limitations.
+
+## Dune export template
+
+Use `queries/dune_m3_solana_trades.sql` as the starting point for exporting the
+16-token / 40-entry / 120-control market context. Replace the `target_mints` and
+`anchor_bounds` placeholders before running it in Dune.
 
 ## Principles
 
