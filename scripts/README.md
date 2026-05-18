@@ -28,9 +28,17 @@ before proceeding. See `docs/RPC_PROVIDER_STRATEGY.md`.
 13_copy_stress_model.py
 14_backtest_report.py
 16_reconcile_open_positions_fifo.py
-18_build_entry_context.py   # Build leakage-safe 30 winner / 30 loser pre-entry sample
-19_build_control_points.py  # Build same-token control points for trigger testing
-20_test_entry_triggers.py   # Test entry-vs-control feature separation
+18_build_entry_context.py        # Build leakage-safe 30 winner / 30 loser pre-entry sample
+19_build_control_points.py       # Build same-token control points for trigger testing
+20_test_entry_triggers.py        # Test entry-vs-control feature separation
+21_build_cluster_context.py      # Build wallet-derived cluster context for entries
+22_build_cross_chain_context.py  # Build cross-chain regime context for entries
+23_test_cluster_triggers.py      # Test cluster context against control anchors
+24_test_cross_chain_triggers.py  # Test cross-chain context against control anchors
+25_build_market_context.py       # Build market-wide context from Dune/DEX trade export
+26_build_market_controls.py      # Build market-wide matched controls
+27_enrich_entry_context_market.py # Join market context onto entry context
+28_build_helius_enrichment.py    # Parse local Helius enhanced tx export
 ```
 
 ## Pre-entry context study
@@ -69,8 +77,33 @@ Default run:
 python scripts/20_test_entry_triggers.py
 ```
 
-See `docs/ENTRY_CONTEXT_PROTOCOL.md` for leakage rules, feature metadata, and
-control-point limitations.
+## Market-wide enrichment
+
+Given a local market trade export:
+
+```text
+data/processed/dune_solana_trades.csv
+```
+
+run:
+
+```bash
+python scripts/25_build_market_context.py --include-controls
+python scripts/26_build_market_controls.py
+python scripts/27_enrich_entry_context_market.py
+```
+
+Optional local Helius export parser:
+
+```bash
+python scripts/28_build_helius_enrichment.py \
+  --input data/processed/helius_enhanced_transactions.json
+```
+
+No enrichment script stores API keys or performs live vendor API calls.
+
+See `docs/ENTRY_CONTEXT_PROTOCOL.md` and `docs/MARKET_WIDE_ENRICHMENT_PROTOCOL.md`
+for leakage rules, feature metadata, and market-wide limitations.
 
 ## Principles
 
