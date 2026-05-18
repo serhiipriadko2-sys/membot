@@ -155,6 +155,90 @@ features:
     status: IMPLEMENTED_REGIME_CONTEXT
     requires_source_audit: true
 
+  - feature_id: market_tx_count_30s
+    family: market_microstructure
+    source: market_context
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: dune_export
+    confidence: medium
+    implemented: true
+    status: IMPLEMENTED_MARKET_CONTEXT
+    requires_source_audit: true
+    source_audit_id: SRC-003
+
+  - feature_id: market_volume_usd_30s
+    family: market_microstructure
+    source: market_context
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: dune_export
+    confidence: medium
+    implemented: true
+    status: IMPLEMENTED_MARKET_CONTEXT
+    requires_source_audit: true
+    source_audit_id: SRC-003
+
+  - feature_id: market_buy_sell_imbalance_30s
+    family: market_microstructure
+    source: market_context
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: dune_export
+    confidence: medium
+    implemented: true
+    status: IMPLEMENTED_MARKET_CONTEXT
+    requires_source_audit: true
+    source_audit_id: SRC-003
+
+  - feature_id: market_unique_buyers_30s
+    family: market_microstructure
+    source: market_context
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: dune_export
+    confidence: medium
+    implemented: true
+    status: IMPLEMENTED_MARKET_CONTEXT
+    requires_source_audit: true
+    source_audit_id: SRC-003
+
+  - feature_id: market_price_change_30s
+    family: market_price_action
+    source: market_context
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: dune_export
+    confidence: medium
+    implemented: true
+    status: IMPLEMENTED_MARKET_CONTEXT
+    requires_source_audit: true
+    source_audit_id: SRC-003
+
+  - feature_id: helius_token_transfer_count
+    family: helius_enrichment
+    source: helius_enrichment
+    window: transaction
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: external_export
+    confidence: low
+    implemented: true
+    status: IMPLEMENTED_LOCAL_EXPORT_PARSER
+    requires_source_audit: true
+    source_audit_id: SRC-008
+
   - feature_id: vpin_sustained_3buckets
     family: vpin_toxicity
     source: market_trade_buckets
