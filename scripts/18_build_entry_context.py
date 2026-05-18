@@ -1,15 +1,8 @@
 #!/usr/bin/env python3
 """Build a balanced pre-entry context dataset for BUY prediction study.
 
-The script is deliberately leakage-safe and RPC-free. It reuses existing local
-pipeline artifacts only:
-- data/processed/wallet_swaps.csv
-- data/processed/trades_paired.csv
-- data/processed/price_series.csv (optional)
-
-Market-wide context is not fabricated. When only wallet-derived data is
-available, market features stay UNKNOWN/empty and `market_coverage` is marked
-`wallet_only`.
+This stage is leakage-safe and RPC-free. It reuses local artifacts only and
+marks missing market-wide context as UNKNOWN instead of fabricating metrics.
 """
 
 from __future__ import annotations
@@ -51,6 +44,10 @@ BASE_FIELDS = [
     "token_age_seconds",
     "ata_created_before_buy",
     "seconds_from_ata_to_buy",
+    "feature_family",
+    "feature_source",
+    "feature_coverage_pct",
+    "confidence",
     "market_coverage",
     "context_status",
     "context_coverage",
@@ -78,7 +75,7 @@ WINDOW_FIELD_TEMPLATES = [
 
 def fields_for_windows(windows: list[int]) -> list[str]:
     fields = BASE_FIELDS[:]
-    insert_at = fields.index("market_coverage")
+    insert_at = fields.index("feature_family")
     window_fields: list[str] = []
     for window in windows:
         for template in WINDOW_FIELD_TEMPLATES:
@@ -99,14 +96,13 @@ def parse_windows(value: str) -> list[int]:
     return sorted(set(windows)) or DEFAULT_WINDOWS
 
 
-def is_before_event(row: dict[str, Any], entry_time: int, entry_slot: int, entry_signature: str) -> bool:
-    """True only for rows strictly before the entry transaction.
+def is_known(value: Any) -> bool:
+    return value not in (None, "", UNKNOWN)
 
-    Same-signature rows are excluded even when timestamps are missing. For equal
-    block_time, lower slot is accepted as before; same slot is treated as not
-    safely before because intra-slot ordering is not known here.
-    """
-    if row.get("signature") == entry_signature:
+
+def is_before_event(row: dict[str, Any], entry_time: int, entry_slot: int, entry_signature: str) -> bool:
+    """True only for rows strictly before the anchor transaction/time."""
+    if entry_signature and row.get("signature") == entry_signature:
         return False
     row_time = as_int(row.get("block_time", row.get("timestamp")), 0)
     row_slot = as_int(row.get("slot"), 0)
@@ -146,18 +142,13 @@ def normalize_trade(trade: dict[str, str], index: int) -> dict[str, Any]:
     }
 
 
-def select_balanced_trades(
-    trades: list[dict[str, str]],
-    sample_winners: int,
-    sample_losers: int,
-) -> list[tuple[str, dict[str, Any]]]:
+def select_balanced_trades(trades: list[dict[str, str]], sample_winners: int, sample_losers: int) -> list[tuple[str, dict[str, Any]]]:
     normalized = [normalize_trade(trade, idx) for idx, trade in enumerate(trades)]
     normalized = [t for t in normalized if t["token_mint"] and t["entry_signature"] and t["entry_time"]]
     normalized.sort(key=lambda t: (t["entry_time"], t["entry_slot"], t["entry_signature"], t["_source_trade_index"]))
     winners = [t for t in normalized if t["pnl_sol"] > 0]
     losers = [t for t in normalized if t["pnl_sol"] < 0]
-    selected: list[tuple[str, dict[str, Any]]] = []
-    selected.extend(("winner", trade) for trade in winners[:sample_winners])
+    selected = [("winner", trade) for trade in winners[:sample_winners]]
     selected.extend(("loser", trade) for trade in losers[:sample_losers])
     selected.sort(key=lambda item: (item[1]["entry_time"], item[1]["entry_slot"], item[1]["_source_trade_index"]))
     return selected
@@ -200,17 +191,11 @@ def build_indexes(swaps: list[dict[str, str]], price_series: list[dict[str, str]
     return swaps_by_mint, swaps_by_entry, prices_by_mint, first_wallet_seen_by_mint, closed_trade_pnl_by_mint
 
 
-def wallet_window_stats(
-    swaps_for_mint: list[dict[str, str]],
-    entry_time: int,
-    entry_slot: int,
-    entry_signature: str,
-    window: int,
-) -> dict[str, Any]:
-    start_time = entry_time - window
+def wallet_window_stats(swaps_for_mint: list[dict[str, str]], anchor_time: int, anchor_slot: int, excluded_signature: str, window: int) -> dict[str, Any]:
+    start_time = anchor_time - window
     prior = [
         row for row in swaps_for_mint
-        if is_before_event(row, entry_time, entry_slot, entry_signature)
+        if is_before_event(row, anchor_time, anchor_slot, excluded_signature)
         and as_int(row.get("block_time"), 0) >= start_time
     ]
     buys = [row for row in prior if row.get("side") == "BUY"]
@@ -227,17 +212,11 @@ def wallet_window_stats(
     }
 
 
-def price_return_stats(
-    price_points_for_mint: list[dict[str, str]],
-    entry_time: int,
-    entry_slot: int,
-    entry_signature: str,
-    window: int,
-) -> dict[str, Any]:
-    start_time = entry_time - window
+def price_return_stats(price_points_for_mint: list[dict[str, str]], anchor_time: int, anchor_slot: int, excluded_signature: str, window: int) -> dict[str, Any]:
+    start_time = anchor_time - window
     prior = [
         row for row in price_points_for_mint
-        if is_before_event(row, entry_time, entry_slot, entry_signature)
+        if is_before_event(row, anchor_time, anchor_slot, excluded_signature)
         and as_int(row.get("timestamp"), 0) >= start_time
         and as_float(row.get("price_sol"), 0.0) > 0
     ]
@@ -250,24 +229,23 @@ def price_return_stats(
     return {"price_return": (end_price / start_price) - 1.0, "price_points": len(prior)}
 
 
-def prior_wallet_buy_stats(swaps_for_mint: list[dict[str, str]], entry_time: int, entry_slot: int, entry_signature: str) -> tuple[int, str]:
-    prior_buys = [
-        row for row in swaps_for_mint
-        if row.get("side") == "BUY" and is_before_event(row, entry_time, entry_slot, entry_signature)
-    ]
-    if not prior_buys:
-        return 0, ""
-    previous = prior_buys[-1]
-    delta = entry_time - as_int(previous.get("block_time"), entry_time)
-    return len(prior_buys), str(max(0, delta))
-
-
-def closed_prior_pnl(closed_trades_for_mint: list[dict[str, Any]], entry_time: int, entry_slot: int) -> float:
-    total = 0.0
-    for trade in closed_trades_for_mint:
-        if trade["exit_time"] < entry_time or (trade["exit_time"] == entry_time and trade["exit_slot"] < entry_slot):
-            total += as_float(trade.get("pnl_sol"), 0.0)
-    return total
+def apply_window_features(row: dict[str, Any], mint: str, anchor_time: int, anchor_slot: int, excluded_signature: str, swaps_by_mint: dict[str, list[dict[str, str]]], prices_by_mint: dict[str, list[dict[str, str]]], windows: list[int]) -> None:
+    for window in windows:
+        price_stats = price_return_stats(prices_by_mint.get(mint, []), anchor_time, anchor_slot, excluded_signature, window)
+        wallet_stats = wallet_window_stats(swaps_by_mint.get(mint, []), anchor_time, anchor_slot, excluded_signature, window)
+        row[f"price_return_{window}s"] = price_stats["price_return"]
+        row[f"price_points_{window}s"] = price_stats["price_points"]
+        row[f"wallet_volume_sol_{window}s"] = wallet_stats["wallet_volume_sol"]
+        row[f"wallet_buy_count_{window}s"] = wallet_stats["wallet_buy_count"]
+        row[f"wallet_sell_count_{window}s"] = wallet_stats["wallet_sell_count"]
+        row[f"wallet_net_buy_sol_{window}s"] = wallet_stats["wallet_net_buy_sol"]
+        row[f"wallet_largest_buy_sol_{window}s"] = wallet_stats["wallet_largest_buy_sol"]
+        row[f"wallet_tx_count_{window}s"] = wallet_stats["wallet_tx_count"]
+        row[f"market_volume_sol_{window}s"] = UNKNOWN
+        row[f"market_buy_count_{window}s"] = UNKNOWN
+        row[f"market_sell_count_{window}s"] = UNKNOWN
+        row[f"market_unique_buyers_{window}s"] = UNKNOWN
+        row[f"market_unique_sellers_{window}s"] = UNKNOWN
 
 
 def coverage_status(row: dict[str, Any], windows: list[int]) -> tuple[str, str, int]:
@@ -285,7 +263,7 @@ def coverage_status(row: dict[str, Any], windows: list[int]) -> tuple[str, str, 
             "ata_created_before_buy",
             "seconds_from_ata_to_buy",
         ]:
-            if row.get(name) in ("", UNKNOWN, None):
+            if not is_known(row.get(name)):
                 unknown_market_fields += 1
         wallet_points += as_int(row.get(f"wallet_tx_count_{window}s"), 0)
         price_points += as_int(row.get(f"price_points_{window}s"), 0)
@@ -296,28 +274,72 @@ def coverage_status(row: dict[str, Any], windows: list[int]) -> tuple[str, str, 
     return "PARTIAL", "wallet_swaps_only", unknown_market_fields
 
 
-def build_entry_context(
-    swaps: list[dict[str, str]],
-    trades: list[dict[str, str]],
-    price_series: list[dict[str, str]],
-    sample_winners: int = 30,
-    sample_losers: int = 30,
-    windows: list[int] | None = None,
-) -> list[dict[str, Any]]:
+def feature_coverage_pct(row: dict[str, Any], windows: list[int]) -> str:
+    names = ["token_age_seconds", "ata_created_before_buy", "seconds_from_ata_to_buy"]
+    for window in windows:
+        names.extend(template.format(w=window) for template in WINDOW_FIELD_TEMPLATES)
+    known = sum(1 for name in names if is_known(row.get(name)))
+    return f"{(known / len(names)) * 100:.2f}" if names else "0.00"
+
+
+def finalize_feature_metadata(row: dict[str, Any], windows: list[int]) -> None:
+    status, coverage, unknowns = coverage_status(row, windows)
+    families: list[str] = []
+    if any(as_int(row.get(f"wallet_tx_count_{window}s"), 0) > 0 for window in windows):
+        families.append("wallet_flow")
+    if any(as_int(row.get(f"price_points_{window}s"), 0) >= 2 for window in windows):
+        families.append("price_action")
+    if as_int(row.get("same_wallet_prior_entries_count"), 0) > 0 or as_float(row.get("same_wallet_prior_pnl_sol"), 0.0) != 0:
+        families.append("repeat_wave")
+    if not families:
+        families.append("none")
+    row["feature_family"] = ";".join(families)
+    row["feature_source"] = {
+        "wallet_price_and_swaps": "wallet_swaps;price_series",
+        "wallet_swaps_only": "wallet_swaps",
+        "none": "none",
+    }.get(coverage, "none")
+    row["feature_coverage_pct"] = feature_coverage_pct(row, windows)
+    row["confidence"] = {
+        "wallet_price_and_swaps": "medium",
+        "wallet_swaps_only": "low",
+        "none": "unknown",
+    }.get(coverage, "unknown")
+    row["market_coverage"] = "wallet_only"
+    row["context_status"] = status
+    row["context_coverage"] = coverage
+    row["unknown_fields_count"] = unknowns
+
+
+def prior_wallet_buy_stats(swaps_for_mint: list[dict[str, str]], entry_time: int, entry_slot: int, entry_signature: str) -> tuple[int, str]:
+    prior_buys = [row for row in swaps_for_mint if row.get("side") == "BUY" and is_before_event(row, entry_time, entry_slot, entry_signature)]
+    if not prior_buys:
+        return 0, ""
+    previous = prior_buys[-1]
+    delta = entry_time - as_int(previous.get("block_time"), entry_time)
+    return len(prior_buys), str(max(0, delta))
+
+
+def closed_prior_pnl(closed_trades_for_mint: list[dict[str, Any]], entry_time: int, entry_slot: int) -> float:
+    total = 0.0
+    for trade in closed_trades_for_mint:
+        if trade["exit_time"] < entry_time or (trade["exit_time"] == entry_time and trade["exit_slot"] < entry_slot):
+            total += as_float(trade.get("pnl_sol"), 0.0)
+    return total
+
+
+def build_entry_context(swaps: list[dict[str, str]], trades: list[dict[str, str]], price_series: list[dict[str, str]], sample_winners: int = 30, sample_losers: int = 30, windows: list[int] | None = None) -> list[dict[str, Any]]:
     windows = windows or DEFAULT_WINDOWS
     selected = select_balanced_trades(trades, sample_winners, sample_losers)
     swaps_by_mint, swaps_by_entry, prices_by_mint, first_seen, closed_pnl = build_indexes(swaps, price_series, trades)
     rows: list[dict[str, Any]] = []
-
     for sample_num, (sample_class, trade) in enumerate(selected, start=1):
         mint = trade["token_mint"]
         entry_signature = trade["entry_signature"]
         entry_time = trade["entry_time"]
         entry_slot = trade["entry_slot"]
         entry_swap = swaps_by_entry.get((mint, entry_signature), {})
-        prior_count, seconds_since_prev = prior_wallet_buy_stats(
-            swaps_by_mint.get(mint, []), entry_time, entry_slot, entry_signature
-        )
+        prior_count, seconds_since_prev = prior_wallet_buy_stats(swaps_by_mint.get(mint, []), entry_time, entry_slot, entry_signature)
         first_mint_seen = first_seen.get(mint, 0)
         wallet_age = entry_time - first_mint_seen if first_mint_seen and entry_time >= first_mint_seen else ""
         row: dict[str, Any] = {
@@ -347,30 +369,11 @@ def build_entry_context(
             "token_age_seconds": UNKNOWN,
             "ata_created_before_buy": UNKNOWN,
             "seconds_from_ata_to_buy": UNKNOWN,
-            "market_coverage": "wallet_only",
             "leakage_guard_ok": "true",
             "notes": "market-wide fields require Dune/Helius/getBlock enrichment; no RPC calls made",
         }
-        for window in windows:
-            price_stats = price_return_stats(prices_by_mint.get(mint, []), entry_time, entry_slot, entry_signature, window)
-            wallet_stats = wallet_window_stats(swaps_by_mint.get(mint, []), entry_time, entry_slot, entry_signature, window)
-            row[f"price_return_{window}s"] = price_stats["price_return"]
-            row[f"price_points_{window}s"] = price_stats["price_points"]
-            row[f"wallet_volume_sol_{window}s"] = wallet_stats["wallet_volume_sol"]
-            row[f"wallet_buy_count_{window}s"] = wallet_stats["wallet_buy_count"]
-            row[f"wallet_sell_count_{window}s"] = wallet_stats["wallet_sell_count"]
-            row[f"wallet_net_buy_sol_{window}s"] = wallet_stats["wallet_net_buy_sol"]
-            row[f"wallet_largest_buy_sol_{window}s"] = wallet_stats["wallet_largest_buy_sol"]
-            row[f"wallet_tx_count_{window}s"] = wallet_stats["wallet_tx_count"]
-            row[f"market_volume_sol_{window}s"] = UNKNOWN
-            row[f"market_buy_count_{window}s"] = UNKNOWN
-            row[f"market_sell_count_{window}s"] = UNKNOWN
-            row[f"market_unique_buyers_{window}s"] = UNKNOWN
-            row[f"market_unique_sellers_{window}s"] = UNKNOWN
-        context_status, context_coverage, unknowns = coverage_status(row, windows)
-        row["context_status"] = context_status
-        row["context_coverage"] = context_coverage
-        row["unknown_fields_count"] = unknowns
+        apply_window_features(row, mint, entry_time, entry_slot, entry_signature, swaps_by_mint, prices_by_mint, windows)
+        finalize_feature_metadata(row, windows)
         rows.append(row)
     return rows
 
@@ -388,19 +391,15 @@ def main() -> None:
 
     ensure_dirs()
     windows = parse_windows(args.windows)
-    swaps = read_csv(Path(args.swaps))
-    trades = read_csv(Path(args.trades))
-    price_series = read_csv(Path(args.price_series))
     rows = build_entry_context(
-        swaps=swaps,
-        trades=trades,
-        price_series=price_series,
+        swaps=read_csv(Path(args.swaps)),
+        trades=read_csv(Path(args.trades)),
+        price_series=read_csv(Path(args.price_series)),
         sample_winners=args.sample_winners,
         sample_losers=args.sample_losers,
         windows=windows,
     )
-    fieldnames = fields_for_windows(windows)
-    write_csv(Path(args.output), rows, fieldnames)
+    write_csv(Path(args.output), rows, fields_for_windows(windows))
     winners = sum(1 for row in rows if row.get("sample_class") == "winner")
     losers = sum(1 for row in rows if row.get("sample_class") == "loser")
     print(f"[OK] wrote {len(rows)} entry context rows to {args.output} (winners={winners}, losers={losers})")
