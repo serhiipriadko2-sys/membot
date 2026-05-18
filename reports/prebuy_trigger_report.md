@@ -2,11 +2,27 @@
 
 ## Summary
 
-- Entry rows: `0`
-- Control rows: `0`
-- Trigger tests: `22`
+- Entry rows: `60`
+- Control rows: `180`
+- Trigger tests: `56`
+- Guardrail: `DATA_QUALITY_*` verdicts are not trading triggers.
+- Guardrail: constant / zero-variance features cannot become PASS.
 - Guardrail: this report does not prove H4 without sufficient coverage, controls, and out-of-sample validation.
 
 ## Verdict counts
 
-- `UNKNOWN`: `22`
+- `DATA_QUALITY_NO_SIGNAL`: `2`
+- `NO_SIGNAL`: `12`
+- `UNKNOWN`: `42`
+
+## Feature role counts
+
+- `data_quality`: `2`
+- `trading_trigger`: `54`
+
+## Information status counts
+
+- `CONSTANT`: `6`
+- `EMPTY`: `40`
+- `LOW_COVERAGE`: `2`
+- `VARIABLE`: `8`
