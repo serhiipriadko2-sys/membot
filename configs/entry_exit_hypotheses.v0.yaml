@@ -1,0 +1,111 @@
+{
+  "schema_version": "entry_exit_hypotheses.v0",
+  "status_policy": {
+    "HYP_THRESHOLD": "Uncalibrated threshold. Treat PASS as hypothesis support, not as final wallet truth.",
+    "RAW_REQUIRED": "Requires raw on-chain or market context columns before verdict can be verified.",
+    "SYNTHETIC_FORBIDDEN_FOR_CLAIMS": "Synthetic fixtures may be used only for smoke tests and UI tests."
+  },
+  "entry": {
+    "market_cap_usd": {
+      "min": 5000,
+      "max": 85000,
+      "status": "HYP_THRESHOLD",
+      "columns": ["market_cap_usd", "entry_market_cap_usd", "avg_buy_market_cap_usd"],
+      "direction": "inside_range",
+      "description": "Candidate sweet spot for ultra-small-cap entries."
+    },
+    "liquidity_usd": {
+      "min": 2000,
+      "status": "HYP_THRESHOLD",
+      "columns": ["liquidity_usd", "entry_liquidity_usd"],
+      "direction": "above_min",
+      "description": "Minimum estimated liquidity needed to enter/exit without extreme slippage."
+    },
+    "token_age_seconds": {
+      "min": 10,
+      "max": 900,
+      "status": "HYP_THRESHOLD",
+      "columns": ["token_age_seconds", "entry_token_age_seconds", "pool_age_seconds"],
+      "direction": "inside_range",
+      "description": "Candidate early-life window: 10 seconds to 15 minutes."
+    },
+    "volume_velocity_tps": {
+      "min": 3,
+      "status": "HYP_THRESHOLD",
+      "columns": ["volume_velocity_tps", "tx_rate_30s", "market_tx_rate_30s"],
+      "direction": "above_min",
+      "description": "Candidate crowd/liquidity activity threshold."
+    },
+    "mint_authority_revoked": {
+      "expected": true,
+      "status": "RAW_REQUIRED",
+      "columns": ["mint_authority_revoked", "mint_authority_disabled"],
+      "direction": "bool_expected",
+      "description": "Anti-rug filter: mint authority should be revoked/disabled."
+    },
+    "freeze_authority_revoked": {
+      "expected": true,
+      "status": "RAW_REQUIRED",
+      "columns": ["freeze_authority_revoked", "freeze_authority_disabled"],
+      "direction": "bool_expected",
+      "description": "Anti-rug filter: freeze authority should be revoked/disabled."
+    },
+    "top10_holders_pct": {
+      "max": 40,
+      "status": "HYP_THRESHOLD",
+      "columns": ["top10_holders_pct", "top_holder_concentration_pct", "top10_holder_concentration_pct"],
+      "direction": "below_max",
+      "description": "Candidate cap on top-holder concentration."
+    },
+    "preflight_sell_simulation_success": {
+      "expected": true,
+      "status": "RAW_REQUIRED",
+      "columns": ["preflight_sell_simulation_success", "sell_simulation_success", "can_sell"],
+      "direction": "bool_expected",
+      "description": "Candidate honeypot/tax/sellability simulation gate."
+    }
+  },
+  "exit": {
+    "hard_stop_loss_pct": {
+      "min": -0.20,
+      "max": -0.10,
+      "status": "HYP_THRESHOLD",
+      "columns": ["pnl_pct", "net_pnl_pct", "return_pct"],
+      "fallback_columns": ["pnl_sol", "entry_sol"],
+      "direction": "loss_inside_range",
+      "description": "Candidate hard stop: losing trades cluster around -10% to -20%."
+    },
+    "time_stop_seconds": {
+      "min": 180,
+      "max": 300,
+      "profit_below": 0.02,
+      "status": "HYP_THRESHOLD",
+      "columns": ["hold_seconds", "pnl_pct", "net_pnl_pct", "return_pct"],
+      "fallback_columns": ["hold_seconds", "pnl_sol", "entry_sol"],
+      "direction": "time_stop_fit",
+      "description": "Candidate time stop: after 3-5 minutes, weak positions are closed."
+    },
+    "trailing_stop": {
+      "activate_after_profit_pct": 0.50,
+      "max_drawdown_from_peak_pct": 0.15,
+      "status": "RAW_REQUIRED",
+      "columns": ["max_unrealized_pnl_pct", "drawdown_from_peak_pct"],
+      "direction": "trailing_fit",
+      "description": "Candidate trailing stop. Requires intra-trade price path."
+    },
+    "scaling_out": {
+      "min_sell_legs": 2,
+      "status": "HYP_THRESHOLD",
+      "columns": ["token_mint", "side", "signature"],
+      "direction": "multi_sell_leg_detected",
+      "description": "Candidate scaling-out behavior: more than one sell leg per token/position."
+    },
+    "tail_open_risk": {
+      "expected_open_tail_allowed": true,
+      "status": "HYP_THRESHOLD",
+      "columns": ["open_token_amount", "remaining_tokens", "position_status"],
+      "direction": "open_tail_detected",
+      "description": "Candidate selective-hold tail behavior after partial exits."
+    }
+  }
+}
