@@ -6,6 +6,21 @@
 - Do not promote PENDING source claims into code comments as facts.
 - Keep all unimplemented features marked with `implemented: false` and `status: HYPOTHESIS`.
 - Do not claim trigger discovery without generated validation outputs.
+- Treat any exposed RPC key prefix as compromised and rotate it.
+
+## Current dataset audit status
+
+See `docs/RUN_AUDIT_2026_05_17.md`.
+
+Known user-provided run status:
+
+```text
+limit 100:   100 swaps, 24 paired trades, 0 fetch errors
+limit 1000:  981 swaps, 438 paired trades, 5 read timeouts, 0.5% fetch error rate
+```
+
+This is enough to continue dataset-building and entry-vs-control validation.
+It is not evidence that a trigger has been found.
 
 ## Priority 1 — Runtime data restoration
 
@@ -25,6 +40,14 @@ Optional:
 data/processed/cross_chain_events.csv
 data/processed/cluster_context.csv
 data/processed/cross_chain_context.csv
+```
+
+If only `wallet_swaps.csv` and `trades_paired.csv` exist, regenerate:
+
+```bash
+python scripts/06_build_price_series.py
+python scripts/18_build_entry_context.py --sample-winners 30 --sample-losers 30
+python scripts/19_build_control_points.py
 ```
 
 ## Priority 2 — Run existing validation harness
