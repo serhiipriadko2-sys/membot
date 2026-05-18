@@ -9,7 +9,7 @@ parse, pair, and analyse Solana wallet activity.
 00_check_rpc_health.py      # Health gate — probe all configured RPC endpoints
 01_fetch_signatures.py      # Fetch wallet signatures from Solana RPC
 02_fetch_transactions.py    # Fetch full transactions for those signatures
-03_normalize_swaps.py       # Extract swap rows → data/parsed/wallet_swaps.csv
+03_normalize_swaps.py       # Extract swap rows → data/processed/wallet_swaps.csv
 04_pair_trades.py           # Pair buys/sells → data/processed/trades_paired.csv
 ```
 
@@ -29,6 +29,7 @@ before proceeding. See `docs/RPC_PROVIDER_STRATEGY.md`.
 14_backtest_report.py
 16_reconcile_open_positions_fifo.py
 18_build_entry_context.py   # Build leakage-safe 30 winner / 30 loser pre-entry sample
+19_build_control_points.py  # Build same-token control points for trigger testing
 ```
 
 ## Pre-entry context study
@@ -43,13 +44,21 @@ Default run:
 python scripts/18_build_entry_context.py --sample-winners 30 --sample-losers 30
 ```
 
-See `docs/ENTRY_CONTEXT_PROTOCOL.md` for leakage rules and current limitations.
+`19_build_control_points.py` creates `data/processed/control_points.csv` from
+entry context rows and matched same-token offsets. Default controls are pre-entry
+only: `-300s`, `-120s`, `-60s`.
 
+Default run:
+
+```bash
+python scripts/19_build_control_points.py
 ```
+
+See `docs/ENTRY_CONTEXT_PROTOCOL.md` for leakage rules, feature metadata, and
+control-point limitations.
 
 ## Principles
 
 - Script outputs write reproducible artifacts, not only console summaries.
 - No fake data: if an upstream step failed, downstream steps refuse to run.
 - All RPC settings come from `.env` (see `.env.example`).
-
