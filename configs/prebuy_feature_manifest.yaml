@@ -9,6 +9,8 @@ features:
     cost: free
     confidence: low
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: wallet_sell_count_30s
     family: wallet_flow
@@ -20,6 +22,8 @@ features:
     cost: free
     confidence: low
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: wallet_net_buy_sol_30s
     family: wallet_flow
@@ -31,6 +35,8 @@ features:
     cost: free
     confidence: low
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: wallet_volume_sol_30s
     family: wallet_flow
@@ -42,6 +48,8 @@ features:
     cost: free
     confidence: low
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: wallet_tx_count_30s
     family: wallet_flow
@@ -53,6 +61,8 @@ features:
     cost: free
     confidence: low
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: price_return_30s
     family: price_action
@@ -64,6 +74,8 @@ features:
     cost: free
     confidence: medium
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: same_wallet_prior_entries_count
     family: repeat_wave
@@ -75,6 +87,8 @@ features:
     cost: free
     confidence: low
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: same_wallet_prior_pnl_sol
     family: repeat_wave
@@ -86,6 +100,8 @@ features:
     cost: free
     confidence: low
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
 
   - feature_id: feature_coverage_pct
     family: data_quality
@@ -97,3 +113,180 @@ features:
     cost: free
     confidence: medium
     implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
+
+  - feature_id: cluster_quality_score
+    family: cluster_context
+    source: cluster_context
+    window: 300s
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
+
+  - feature_id: cluster_toxicity_score
+    family: cluster_context
+    source: cluster_context
+    window: 300s
+    direction: lower
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+    status: IMPLEMENTED
+    requires_source_audit: false
+
+  - feature_id: combined_momentum
+    family: cross_chain_regime
+    source: cross_chain_context
+    window: 900s
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: external_export
+    confidence: low
+    implemented: true
+    status: IMPLEMENTED_REGIME_CONTEXT
+    requires_source_audit: true
+
+  - feature_id: vpin_sustained_3buckets
+    family: vpin_toxicity
+    source: market_trade_buckets
+    window: bucketed
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: expensive
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+    source_audit_id: SRC-014
+
+  - feature_id: graduation_crescendo_score
+    family: graduation_crescendo
+    source: bonding_curve_state
+    window: 30s_60s_300s
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: medium
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+    source_audit_id: SRC-006
+
+  - feature_id: token_2022_risk_score
+    family: token_2022_safety
+    source: mint_account_extensions
+    window: entry_snapshot
+    direction: lower
+    leakage_safe: true
+    market_wide: false
+    cost: rpc_or_indexer
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+    source_audit_id: SRC-011
+
+  - feature_id: creator_fingerprint_score
+    family: creator_fingerprint
+    source: creator_history
+    window: all_prior
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: indexer
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+
+  - feature_id: slot_aheadness
+    family: slot_execution
+    source: getBlock_or_stream
+    window: same_slot
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: expensive
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+    source_audit_id: SRC-002
+
+  - feature_id: seconds_from_ata_to_buy
+    family: slot_execution
+    source: raw_transactions
+    window: pre_entry
+    direction: lower
+    leakage_safe: true
+    market_wide: false
+    cost: free_if_raw_available
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: false
+
+  - feature_id: boost_purchase_signal
+    family: attention_arbitrage
+    source: dexscreener_or_metadata
+    window: before_after_entry
+    direction: higher
+    leakage_safe: conditional
+    market_wide: true
+    cost: api_limited
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+    source_audit_id: SRC-005
+
+  - feature_id: cross_chain_whale_bridge
+    family: cross_chain_regime
+    source: bridge_events
+    window: 15m
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: external_export
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+
+  - feature_id: entropy_compression_score
+    family: entropy_compression
+    source: market_microstructure
+    window: rolling
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: expensive
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
+    source_audit_id: SRC-016
+
+  - feature_id: reflexivity_feedback_score
+    family: reflexivity_feedback
+    source: attention_price_volume
+    window: rolling
+    direction: higher
+    leakage_safe: true
+    market_wide: true
+    cost: expensive
+    confidence: unknown
+    implemented: false
+    status: HYPOTHESIS
+    requires_source_audit: true
