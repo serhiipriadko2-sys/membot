@@ -1,0 +1,99 @@
+features:
+  - feature_id: wallet_buy_count_30s
+    family: wallet_flow
+    source: wallet_swaps
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+
+  - feature_id: wallet_sell_count_30s
+    family: wallet_flow
+    source: wallet_swaps
+    window: 30s
+    direction: lower
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+
+  - feature_id: wallet_net_buy_sol_30s
+    family: wallet_flow
+    source: wallet_swaps
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+
+  - feature_id: wallet_volume_sol_30s
+    family: wallet_flow
+    source: wallet_swaps
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+
+  - feature_id: wallet_tx_count_30s
+    family: wallet_flow
+    source: wallet_swaps
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+
+  - feature_id: price_return_30s
+    family: price_action
+    source: price_series
+    window: 30s
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: medium
+    implemented: true
+
+  - feature_id: same_wallet_prior_entries_count
+    family: repeat_wave
+    source: trades_paired;wallet_swaps
+    window: all_prior
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+
+  - feature_id: same_wallet_prior_pnl_sol
+    family: repeat_wave
+    source: trades_paired
+    window: all_prior
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: low
+    implemented: true
+
+  - feature_id: feature_coverage_pct
+    family: data_quality
+    source: entry_context
+    window: row
+    direction: higher
+    leakage_safe: true
+    market_wide: false
+    cost: free
+    confidence: medium
+    implemented: true
