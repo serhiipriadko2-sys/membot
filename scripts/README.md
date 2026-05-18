@@ -30,6 +30,7 @@ before proceeding. See `docs/RPC_PROVIDER_STRATEGY.md`.
 16_reconcile_open_positions_fifo.py
 18_build_entry_context.py   # Build leakage-safe 30 winner / 30 loser pre-entry sample
 19_build_control_points.py  # Build same-token control points for trigger testing
+20_test_entry_triggers.py   # Test entry-vs-control feature separation
 ```
 
 ## Pre-entry context study
@@ -52,6 +53,20 @@ Default run:
 
 ```bash
 python scripts/19_build_control_points.py
+```
+
+`20_test_entry_triggers.py` compares `entry_context.csv` against
+`control_points.csv` using `configs/prebuy_feature_manifest.yaml` and writes:
+
+```text
+data/processed/trigger_tests.csv
+reports/prebuy_trigger_report.md
+```
+
+Default run:
+
+```bash
+python scripts/20_test_entry_triggers.py
 ```
 
 See `docs/ENTRY_CONTEXT_PROTOCOL.md` for leakage rules, feature metadata, and
