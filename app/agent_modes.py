@@ -10,11 +10,11 @@ AGENT_MODES: dict[str, dict[str, str]] = {
     "Study": {
         "title": "Study · изучить",
         "goal": "Понять, какие данные уже есть, чего не хватает и где начинается unknown.",
-        "output": "Снимок источников, missing artifacts, свежесть и готовность к анализу.",
+        "output": "Снимок источников, недостающие артефакты, свежесть и готовность к анализу.",
         "guard": "Не делать выводы без raw/FIFO/fee якорей.",
     },
     "Analyze": {
-        "title": "Analyze · проанализировать",
+        "title": "Analyze · анализ",
         "goal": "Найти паттерны, несостыковки, fee/Jito следы, режимы поведения и слабые места гипотез.",
         "output": "Разбор evidence, риск drift, flags и направления проверки.",
         "guard": "Не превращать корреляцию в причину и не выдавать dashboard claims как raw truth.",
@@ -26,7 +26,7 @@ AGENT_MODES: dict[str, dict[str, str]] = {
         "guard": "Не хранить secrets, private keys, API keys и не считать память каноном.",
     },
     "Predict": {
-        "title": "Predict · предсказать",
+        "title": "Predict · прогноз",
         "goal": "Оценить вероятность поддержки гипотезы и вероятность прохождения следующей валидации.",
         "output": "UNKNOWN/LOW/MEDIUM/HIGH + evidence-score + риск + цена ошибки.",
         "guard": "Не обещать прибыль и не выдавать рекомендацию/указание.",
@@ -34,13 +34,13 @@ AGENT_MODES: dict[str, dict[str, str]] = {
     "Notify": {
         "title": "Notify · уведомлять",
         "goal": "Сформировать безопасные условия уведомлений по изменению данных, риска или качества покрытия.",
-        "output": "Watch conditions: coverage, fee/Jito drift, stale data, new artifact, degraded RPC.",
-        "guard": "Не отправлять buy/sell alerts; уведомление только о состоянии и риске.",
+        "output": "Условия наблюдения: coverage, fee/Jito drift, stale data, new artifact, degraded RPC.",
+        "guard": "Не отправлять BUY/SELL-уведомления; уведомление только о состоянии и риске.",
     },
     "Gather": {
         "title": "Gather · собрать",
         "goal": "Понять, какие данные надо подтянуть дальше из разрешённых источников.",
-        "output": "Data wishlist, source plan, freshness requirements, next query/run plan.",
+        "output": "Список данных, source plan, требования свежести и следующий query/run plan.",
         "guard": "Не собирать secrets и не использовать неразрешённые источники.",
     },
 }
@@ -80,7 +80,7 @@ def render_active_mode_card(mode: str) -> None:
         f"<div class='panel'><div class='small'>АКТИВНЫЙ РЕЖИМ</div><h4>{escape(selected['title'])}</h4>"
         f"<p class='muted'>{escape(selected['goal'])}</p>"
         f"<p><b>Выход:</b> {escape(selected['output'])}</p>"
-        f"<p><b>Guard:</b> {escape(selected['guard'])}</p></div>",
+        f"<p><b>Граница:</b> {escape(selected['guard'])}</p></div>",
         unsafe_allow_html=True,
     )
 
@@ -132,7 +132,7 @@ def tool_notify_mode(ctx: dict[str, Any]) -> str:
         "trigger evidence-score меняет band LOW/MEDIUM/HIGH",
         "RPC/data freshness деградирует или появляются 429/timeout",
     ]
-    return "**Notify:** безопасные уведомления только о состоянии и риске, не BUY/SELL. Watch conditions:\n" + "\n".join([f"- {w}" for w in watches])
+    return "**Notify:** безопасные уведомления только о состоянии и риске, не BUY/SELL. Условия наблюдения:\n" + "\n".join([f"- {w}" for w in watches])
 
 
 def tool_gather_mode(ctx: dict[str, Any]) -> str:
@@ -179,4 +179,4 @@ def route_mode_query(question: str, ctx: dict[str, Any]) -> str | None:
 
 
 def mode_lines_markdown() -> str:
-    return "\n".join([f"- **{mode}** — {item['goal']} Guard: {item['guard']}" for mode, item in AGENT_MODES.items()])
+    return "\n".join([f"- **{mode}** — {item['goal']} Граница: {item['guard']}" for mode, item in AGENT_MODES.items()])
