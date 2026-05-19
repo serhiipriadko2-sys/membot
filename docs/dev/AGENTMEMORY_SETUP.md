@@ -34,6 +34,11 @@ AgentMemory upstream documents:
 - MCP shim via `@agentmemory/mcp`
 - iii bridge functions such as `mem::remember`, `mem::observe`, `mem::context`, `mem::smart-search`, `mem::forget`
 
+Local verification on 2026-05-19:
+- npm `latest` for `@agentmemory/agentmemory` was `0.9.21`
+- Windows required `iii-engine` / `iii.exe` `0.11.2` on PATH before the server could start
+- `agentmemory --version` may initialize runtime services; use `npm list -g @agentmemory/agentmemory --depth=0` for a non-server package check
+
 Primary upstream references:
 - https://github.com/rohitg00/agentmemory
 - https://www.agent-memory.dev/
@@ -44,6 +49,16 @@ Install once:
 
 ```bash
 npm install -g @agentmemory/agentmemory
+```
+
+Windows dependency note:
+
+```powershell
+# If startup reports missing iii-engine, install iii.exe 0.11.2 from:
+# https://github.com/iii-hq/iii/releases/tag/iii%2Fv0.11.2
+# Put iii.exe somewhere on PATH, for example:
+# C:\Users\<you>\.local\bin\iii.exe
+iii --version
 ```
 
 Start the server:
@@ -57,6 +72,11 @@ Run the demo in a second terminal:
 ```bash
 agentmemory demo
 ```
+
+Demo acceptance:
+- runtime PASS if the command completes, seeds sessions, and keyword searches return results
+- semantic recall PASS only if `agentmemory status` reports a real embedding provider, not `bm25-only`
+- without provider keys, `Provider: noop` and `Embeddings: bm25-only` are expected; do not treat paraphrase search as proven
 
 Open the viewer:
 
@@ -78,11 +98,25 @@ Reason: `npx` can serve stale cached versions, so prefer either global install o
 curl http://localhost:3111/agentmemory/health
 ```
 
+PowerShell:
+
+```powershell
+Invoke-RestMethod http://localhost:3111/agentmemory/health
+```
+
 If this fails, run:
 
 ```bash
 agentmemory doctor
 ```
+
+Status check:
+
+```bash
+agentmemory status
+```
+
+For full semantic recall, configure an embedding provider in `~/.agentmemory/.env` without committing secrets.
 
 ## MCP JSON config
 
@@ -123,7 +157,17 @@ Remote/reverse-proxy capable config:
 
 The `${VAR}` values are inherited from the shell at MCP-server launch. Keep them out of git.
 
-## Codex TOML config
+## Codex MCP config
+
+Preferred additive CLI path:
+
+```powershell
+codex mcp add agentmemory --env AGENTMEMORY_URL=http://localhost:3111 -- npx -y @agentmemory/mcp
+codex mcp get agentmemory
+codex mcp list
+```
+
+Manual TOML equivalent:
 
 ```toml
 [mcp_servers.agentmemory]
@@ -145,6 +189,8 @@ args = ["-y", "@agentmemory/mcp"]
 AGENTMEMORY_URL = "${AGENTMEMORY_URL}"
 AGENTMEMORY_SECRET = "${AGENTMEMORY_SECRET}"
 ```
+
+Host note: VS Code workspace MCP files can use `servers` instead of `mcpServers`; do not paste the generic JSON block into that shape without adapting it.
 
 ## Programmatic iii access
 
