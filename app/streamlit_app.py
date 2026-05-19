@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import runpy
-from pathlib import Path
+import streamlit as st
 
 
-ISKRA_FORGE_PAGE = Path(__file__).resolve().parent / "pages" / "00_Iskra_Forge.py"
+# Explicit navigation prevents Streamlit from turning every legacy file in
+# app/pages into a top-level menu item. The product has one main interface
+# and one data bridge, not a page graveyard.
 
+pages = [
+    st.Page("pages/00_Iskra_Forge.py", title="Iskra Forge", icon="*", default=True),
+    st.Page("pages/01_Supabase_Bridge.py", title="Data Bridge", icon="DB"),
+]
 
-if __name__ == "__main__":
-    runpy.run_path(str(ISKRA_FORGE_PAGE), run_name="__main__")
+st.navigation(pages).run()
