@@ -29,15 +29,18 @@ DATASETS = {
 }
 CRITICAL = ["wallet_swaps", "trades_paired", "daily_pnl_calendar", "priority_fee_jito_audit"]
 LABELS = {
-    "wallet_swaps": "Raw swaps",
-    "trades_paired": "FIFO trades",
-    "daily_pnl_calendar": "Daily PnL",
-    "priority_fee_jito_audit": "Fee/Jito audit",
-    "trigger_tests": "Pre-buy triggers",
-    "entry_exit_hypothesis_tests": "Entry/exit hypotheses",
-    "entry_context": "Entry context",
-    "control_points": "Control points",
-    "other": "Other",
+    "wallet_swaps": "Сырые swaps",
+    "trades_paired": "FIFO-сделки",
+    "daily_pnl_calendar": "PnL по дням",
+    "priority_fee_jito_audit": "Fee/Jito аудит",
+    "trigger_tests": "Pre-buy триггеры",
+    "entry_exit_hypothesis_tests": "Гипотезы входа/выхода",
+    "entry_context": "Контекст входа",
+    "control_points": "Контрольные точки",
+    "daily_pnl_calendar_report": "Отчёт PnL по дням",
+    "priority_fee_jito_audit_report": "Отчёт Fee/Jito",
+    "entry_exit_hypothesis_report": "Отчёт гипотез входа/выхода",
+    "other": "Другое",
 }
 KNOWN_TYPES = [*DATASETS.keys(), "daily_pnl_calendar_report", "priority_fee_jito_audit_report", "entry_exit_hypothesis_report", "other"]
 
@@ -49,7 +52,7 @@ MINT = "#00FFC2"
 TEXT = "#F5EFE2"
 MUTED = "#9CA8B7"
 
-st.set_page_config(page_title="membot - Iskra Forge", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="membot · Кузница Искры", layout="wide", initial_sidebar_state="expanded")
 
 
 def inject_css() -> None:
@@ -112,12 +115,12 @@ def status_df() -> pd.DataFrame:
         up = uploaded().get(name)
         exists = bool(up) or path.exists()
         rows.append({
-            "Artifact": LABELS[name],
-            "Code": name,
-            "Found": exists,
-            "File": up.get("file") if up else str(path.relative_to(ROOT)),
-            "Rows": up.get("rows", 0) if up else (len(load_csv(str(path))) if exists else 0),
-            "Bytes": up.get("bytes", 0) if up else (path.stat().st_size if exists else 0),
+            "Артефакт": LABELS[name],
+            "Код": name,
+            "Найден": exists,
+            "Файл": up.get("file") if up else str(path.relative_to(ROOT)),
+            "Строк": up.get("rows", 0) if up else (len(load_csv(str(path))) if exists else 0),
+            "Байт": up.get("bytes", 0) if up else (path.stat().st_size if exists else 0),
         })
     return pd.DataFrame(rows)
 
@@ -127,15 +130,7 @@ def find_col(df: pd.DataFrame, candidates: list[str]) -> str | None:
 
 
 def plotly_layout(fig: go.Figure, height: int = 280) -> go.Figure:
-    fig.update_layout(
-        height=height,
-        margin=dict(l=8, r=8, t=34, b=8),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=TEXT, family="Inter, system-ui, sans-serif"),
-        hoverlabel=dict(bgcolor="#0B0E14", font_color=TEXT, bordercolor=GOLD),
-        legend=dict(orientation="h", y=-0.16, x=0, bgcolor="rgba(0,0,0,0)"),
-    )
+    fig.update_layout(height=height, margin=dict(l=8, r=8, t=34, b=8), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color=TEXT, family="Inter, system-ui, sans-serif"), hoverlabel=dict(bgcolor="#0B0E14", font_color=TEXT, bordercolor=GOLD), legend=dict(orientation="h", y=-0.16, x=0, bgcolor="rgba(0,0,0,0)"))
     fig.update_xaxes(gridcolor="rgba(255,195,107,0.08)", zeroline=False, color=MUTED)
     fig.update_yaxes(gridcolor="rgba(255,195,107,0.08)", zeroline=False, color=MUTED)
     return fig
@@ -148,7 +143,7 @@ def empty(title: str, body: str, command: str | None = None) -> None:
 def table(df: pd.DataFrame, key: str) -> None:
     if df.empty:
         return
-    q = st.text_input("Filter", key=f"filter_{key}", placeholder="mint, signature, verdict, token...")
+    q = st.text_input("Фильтр", key=f"filter_{key}", placeholder="mint, signature, verdict, token...")
     view = df
     if q:
         mask = pd.Series(False, index=df.index)
@@ -162,10 +157,10 @@ def hero() -> None:
     short = TARGET_WALLET[:7] + "..." + TARGET_WALLET[-5:]
     h(f"""
     <div class='hero'>
-      <div class='kicker'>SIGNAL FORGE - SOLANA MEME INTELLIGENCE</div>
-      <div class='title'>raw truth<br/>before copy</div>
-      <p class='muted'>Forensic interface for wallet reverse-engineering: {hint('signature', 'signatures')}, {hint('fifo', 'FIFO')}, {hint('jito', 'fee/Jito audit')}, controls, and {hint('trigger', 'pre-buy hypotheses')}.</p>
-      <div class='badges'><span class='chip ok'>Read-only</span><span class='chip violet'>Target {short}</span><span class='chip warn'>Dashboard != SoT</span><span class='chip hot'>No blind copytrade</span></div>
+      <div class='kicker'>КУЗНИЦА СИГНАЛОВ · SOLANA MEME INTELLIGENCE</div>
+      <div class='title'>сырая правда<br/>до копирования</div>
+      <p class='muted'>Forensic-интерфейс для reverse-engineering кошелька: {hint('signature', 'signatures')}, {hint('fifo', 'FIFO')}, {hint('jito', 'fee/Jito аудит')}, {hint('cluster_context', 'cluster_context')}, {hint('repeat_wave', 'repeat_wave')}, {hint('price_action', 'price_action')}, {hint('cross_chain_regime', 'cross_chain_regime')} и {hint('trigger', 'pre-buy гипотезы')}.</p>
+      <div class='badges'><span class='chip ok'>Только чтение</span><span class='chip violet'>Цель {short}</span><span class='chip warn'>Dashboard != SoT</span><span class='chip hot'>Не копитрейдить вслепую</span></div>
     </div>
     """)
 
@@ -189,28 +184,21 @@ def build_cluster_figure(swaps: pd.DataFrame, trades: pd.DataFrame) -> go.Figure
         tmp["_buy"] = 0
         tmp["_sell"] = 0
     tmp["_amount"] = pd.to_numeric(tmp[amount_col], errors="coerce").abs().fillna(0) if amount_col else 1.0
-    grouped = tmp.groupby("_token", dropna=False).agg(tx_count=("_token", "size"), buy=("_buy", "sum"), sell=("_sell", "sum"), amount=("_amount", "sum")).reset_index()
-    grouped = grouped.sort_values(["tx_count", "amount"], ascending=False).head(18)
+    grouped = tmp.groupby("_token", dropna=False).agg(tx_count=("_token", "size"), buy=("_buy", "sum"), sell=("_sell", "sum"), amount=("_amount", "sum")).reset_index().sort_values(["tx_count", "amount"], ascending=False).head(18)
     if grouped.empty:
         return None
     max_count = max(float(grouped["tx_count"].max()), 1.0)
-    xs, ys = [], []
-    for i, count in enumerate(grouped["tx_count"].tolist()):
-        angle = (2 * math.pi * i / max(len(grouped), 1)) - math.pi / 2
-        radius = 1.0 + 0.52 * (float(count) / max_count)
-        xs.append(radius * math.cos(angle))
-        ys.append(radius * math.sin(angle))
-    grouped["x"] = xs
-    grouped["y"] = ys
+    grouped["x"] = [(1.0 + 0.52 * (float(c) / max_count)) * math.cos((2 * math.pi * i / max(len(grouped), 1)) - math.pi / 2) for i, c in enumerate(grouped["tx_count"].tolist())]
+    grouped["y"] = [(1.0 + 0.52 * (float(c) / max_count)) * math.sin((2 * math.pi * i / max(len(grouped), 1)) - math.pi / 2) for i, c in enumerate(grouped["tx_count"].tolist())]
     grouped["balance"] = grouped["buy"] - grouped["sell"]
     fig = go.Figure()
     for _, row in grouped.iterrows():
         fig.add_trace(go.Scatter(x=[0, row["x"]], y=[0, row["y"]], mode="lines", line=dict(color="rgba(0,230,255,0.20)", width=1), hoverinfo="skip", showlegend=False))
-    fig.add_trace(go.Scatter(x=[0], y=[0], mode="markers+text", marker=dict(size=34, color=GOLD, line=dict(color=CYAN, width=2)), text=["wallet"], textposition="bottom center", name="target wallet", hovertext=[TARGET_WALLET], hoverinfo="text"))
-    fig.add_trace(go.Scatter(x=grouped["x"], y=grouped["y"], mode="markers+text", marker=dict(size=12 + 34 * grouped["tx_count"] / max_count, color=grouped["balance"], colorscale=[[0, EMBER], [0.5, VIOLET], [1, MINT]], showscale=False, line=dict(color="rgba(255,195,107,0.55)", width=1)), text=grouped["_token"], textposition="top center", name="tokens", hovertemplate="token=%{text}<br>tx=%{customdata[0]}<br>buy=%{customdata[1]}<br>sell=%{customdata[2]}<br>amount=%{customdata[3]:.4f}<extra></extra>", customdata=grouped[["tx_count", "buy", "sell", "amount"]].to_numpy()))
+    fig.add_trace(go.Scatter(x=[0], y=[0], mode="markers+text", marker=dict(size=34, color=GOLD, line=dict(color=CYAN, width=2)), text=["wallet"], textposition="bottom center", name="целевой кошелёк", hovertext=[TARGET_WALLET], hoverinfo="text"))
+    fig.add_trace(go.Scatter(x=grouped["x"], y=grouped["y"], mode="markers+text", marker=dict(size=12 + 34 * grouped["tx_count"] / max_count, color=grouped["balance"], colorscale=[[0, EMBER], [0.5, VIOLET], [1, MINT]], showscale=False, line=dict(color="rgba(255,195,107,0.55)", width=1)), text=grouped["_token"], textposition="top center", name="токены", hovertemplate="token=%{text}<br>tx=%{customdata[0]}<br>buy=%{customdata[1]}<br>sell=%{customdata[2]}<br>amount=%{customdata[3]:.4f}<extra></extra>", customdata=grouped[["tx_count", "buy", "sell", "amount"]].to_numpy()))
     fig.update_xaxes(visible=False)
     fig.update_yaxes(visible=False, scaleanchor="x", scaleratio=1)
-    fig.update_layout(title="Cluster map from token interaction frequency", showlegend=False)
+    fig.update_layout(title="Карта кластеров по частоте взаимодействия с токенами", showlegend=False)
     return plotly_layout(fig, height=330)
 
 
@@ -229,12 +217,11 @@ def build_daily_calendar_figure(daily: pd.DataFrame) -> go.Figure | None:
         return None
     df["_week"] = df["_date"].dt.to_period("W-MON").dt.start_time.dt.strftime("%Y-%m-%d")
     df["_weekday"] = df["_date"].dt.day_name().str.slice(0, 3)
-    weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    pivot = df.pivot_table(index="_weekday", columns="_week", values="_pnl", aggfunc="sum").reindex(weekdays)
+    pivot = df.pivot_table(index="_weekday", columns="_week", values="_pnl", aggfunc="sum").reindex(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     if pivot.empty:
         return None
     fig = go.Figure(data=go.Heatmap(z=pivot.to_numpy(), x=list(pivot.columns), y=list(pivot.index), colorscale=[[0, EMBER], [0.5, "#1A1F2B"], [1, MINT]], zmid=0, hovertemplate="week=%{x}<br>day=%{y}<br>pnl=%{z:.4f}<extra></extra>"))
-    fig.update_layout(title="Daily PnL calendar from replay artifact")
+    fig.update_layout(title="Календарь PnL по raw/FIFO артефакту")
     return plotly_layout(fig, height=300)
 
 
@@ -259,15 +246,13 @@ def build_fee_figure(fee: pd.DataFrame) -> go.Figure | None:
         labels.append("ComputeBudget rows")
         values.append(int(fee[cb_col].astype(str).str.lower().isin(["true", "1", "yes"]).sum()))
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.62, marker=dict(colors=[CYAN, GOLD, VIOLET, MINT, EMBER, "#8EA0B8", "#364152"]), textinfo="label+value")])
-    fig.update_layout(title="Fee/Jito evidence orbit")
+    fig.update_layout(title="Fee/Jito орбита доказательств")
     return plotly_layout(fig, height=300)
 
 
 def trigger_source_df() -> pd.DataFrame:
     trig = local_df("trigger_tests")
-    if not trig.empty:
-        return trig
-    return local_df("entry_exit_hypothesis_tests")
+    return trig if not trig.empty else local_df("entry_exit_hypothesis_tests")
 
 
 def score_for_row(row: pd.Series, score_col: str | None, status_col: str | None) -> float:
@@ -299,14 +284,14 @@ def build_trigger_radar_figure(triggers: pd.DataFrame) -> go.Figure | None:
     grouped = df.groupby(name_col, dropna=False)["_score"].mean().sort_values(ascending=False).head(8)
     if grouped.empty:
         return None
-    fig = go.Figure(data=go.Scatterpolar(r=grouped.values.tolist(), theta=[str(i)[:22] for i in grouped.index.tolist()], fill="toself", line=dict(color=CYAN, width=2), marker=dict(color=GOLD, size=7), name="support"))
-    fig.update_layout(title="Trigger radar from hypothesis rows", polar=dict(bgcolor="rgba(0,0,0,0)", radialaxis=dict(range=[0, 100], gridcolor="rgba(255,195,107,0.12)", tickfont=dict(color=MUTED)), angularaxis=dict(gridcolor="rgba(255,195,107,0.10)", tickfont=dict(color=TEXT))), showlegend=False)
+    fig = go.Figure(data=go.Scatterpolar(r=grouped.values.tolist(), theta=[str(i)[:22] for i in grouped.index.tolist()], fill="toself", line=dict(color=CYAN, width=2), marker=dict(color=GOLD, size=7), name="поддержка"))
+    fig.update_layout(title="Радар pre-buy гипотез", polar=dict(bgcolor="rgba(0,0,0,0)", radialaxis=dict(range=[0, 100], gridcolor="rgba(255,195,107,0.12)", tickfont=dict(color=MUTED)), angularaxis=dict(gridcolor="rgba(255,195,107,0.10)", tickfont=dict(color=TEXT))), showlegend=False)
     return plotly_layout(fig, height=330)
 
 
 def render_signal_cards(triggers: pd.DataFrame) -> None:
     if triggers.empty:
-        empty("Signal cards need trigger rows", "Upload trigger_tests.csv or entry_exit_hypothesis_tests.csv to convert this panel from decorative to live data.")
+        empty("Карточкам сигналов нужны строки триггеров", "Загрузи trigger_tests.csv или entry_exit_hypothesis_tests.csv, чтобы панель стала живой.")
         return
     name_col = find_col(triggers, ["hypothesis_id", "trigger", "hypothesis", "feature", "name", "family", "scope"])
     status_col = find_col(triggers, ["status", "verdict", "result"])
@@ -317,12 +302,12 @@ def render_signal_cards(triggers: pd.DataFrame) -> None:
     df = df.sort_values("_score", ascending=False).head(5)
     cards = []
     for _, row in df.iterrows():
-        name = str(row.get(name_col, "Signal candidate"))[:80] if name_col else "Signal candidate"
+        name = str(row.get(name_col, "Кандидат сигнала"))[:80] if name_col else "Кандидат сигнала"
         status = str(row.get(status_col, "UNKNOWN"))[:36] if status_col else "UNKNOWN"
-        note = str(row.get(note_col, "Needs raw replay and controls."))[:140] if note_col else "Needs raw replay and controls."
+        note = str(row.get(note_col, "Нужны raw replay и controls."))[:140] if note_col else "Нужны raw replay и controls."
         score = float(row["_score"])
         cls = "ok" if score >= 75 else "warn" if score >= 35 else "hot"
-        cards.append(f"<div class='signal-card'><div class='small'>LIVE SIGNAL CARD</div><h4>{name}</h4><p class='muted'>{note}</p><div class='signal-meta'><span class='chip {cls}'>{status}</span><span class='chip violet'>score {score:.0f}</span></div><div class='signal-bar'><i style='width:{score:.0f}%'></i></div></div>")
+        cards.append(f"<div class='signal-card'><div class='small'>ЖИВАЯ КАРТОЧКА СИГНАЛА</div><h4>{name}</h4><p class='muted'>{note}</p><div class='signal-meta'><span class='chip {cls}'>{status}</span><span class='chip violet'>score {score:.0f}</span></div><div class='signal-bar'><i style='width:{score:.0f}%'></i></div></div>")
     h("".join(cards))
 
 
@@ -335,44 +320,39 @@ def render_plot(fig: go.Figure | None, title: str, body: str, key: str) -> None:
 
 def get_current_frames() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     status = status_df()
-    swaps = local_df("wallet_swaps")
-    trades = local_df("trades_paired")
-    daily = local_df("daily_pnl_calendar")
-    fee = local_df("priority_fee_jito_audit")
-    triggers = trigger_source_df()
-    return status, swaps, trades, daily, fee, triggers
+    return status, local_df("wallet_swaps"), local_df("trades_paired"), local_df("daily_pnl_calendar"), local_df("priority_fee_jito_audit"), trigger_source_df()
 
 
 def command_center() -> None:
     status, swaps, trades, daily, fee, triggers = get_current_frames()
-    found = int(status["Found"].sum())
+    found = int(status["Найден"].sum())
     expected = len(status)
-    critical = int(status[status["Code"].isin(CRITICAL)]["Found"].sum())
+    critical = int(status[status["Код"].isin(CRITICAL)]["Найден"].sum())
     coverage = found / max(expected, 1)
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Artifacts", f"{found}/{expected}")
-    c2.metric("Critical raw", f"{critical}/{len(CRITICAL)}")
-    c3.metric("Rows", int(status["Rows"].sum()))
-    c4.metric("Coverage", f"{coverage:.0%}")
+    c1.metric("Артефакты", f"{found}/{expected}")
+    c2.metric("Критический raw", f"{critical}/{len(CRITICAL)}")
+    c3.metric("Строки", int(status["Строк"].sum()))
+    c4.metric("Покрытие", f"{coverage:.0%}")
     if critical < len(CRITICAL):
-        empty("Raw chain incomplete", "Forensic verdict needs Raw swaps, FIFO trades, Daily PnL and Fee/Jito. Missing anchors keep verdict UNKNOWN.", "GitHub Actions -> Run forensic verification -> limit=600 -> upload artifact")
+        empty("Raw-цепочка неполная", "Для forensic-вердикта нужны raw swaps, FIFO trades, Daily PnL и Fee/Jito. Без якорей verdict остаётся UNKNOWN.", "GitHub Actions -> Run forensic verification -> limit=600 -> upload artifact")
     left, right = st.columns([2.2, 1.0], gap="large")
     with left:
-        h(f"""<div class='panel'><div class='small'>WALLET OVERVIEW</div><h3>{TARGET_WALLET[:7]}...{TARGET_WALLET[-5:]}</h3><div class='badges'><span class='chip violet'>Watchlist</span><span class='chip ok'>Read-only</span><span class='chip warn'>Coverage {coverage:.0%}</span></div></div>""")
+        h(f"""<div class='panel'><div class='small'>ОБЗОР КОШЕЛЬКА</div><h3>{TARGET_WALLET[:7]}...{TARGET_WALLET[-5:]}</h3><div class='badges'><span class='chip violet'>Watchlist</span><span class='chip ok'>Только чтение</span><span class='chip warn'>Покрытие {coverage:.0%}</span></div></div>""")
         chart_cols = st.columns(2)
         with chart_cols[0]:
-            render_plot(build_trigger_radar_figure(triggers), "Trigger radar is waiting for data", "Upload trigger tests or entry/exit hypothesis rows.", key="forge_trigger_radar")
+            render_plot(build_trigger_radar_figure(triggers), "Радар триггеров ждёт данные", "Загрузи trigger tests или entry/exit hypothesis rows.", key="forge_trigger_radar")
         with chart_cols[1]:
-            render_plot(build_fee_figure(fee), "Fee/Jito orbit is waiting for data", "Upload priority_fee_jito_audit.csv.", key="forge_fee_orbit")
-        render_plot(build_daily_calendar_figure(daily), "Daily calendar is waiting for data", "Upload daily_pnl_calendar.csv to render the heatmap.", key="forge_daily_calendar")
-        h(f"""<div class='panel'><div class='small'>{hint('artifact', 'RAW ARTIFACT STATUS')}</div><div class='progress'><i style='width:{critical / max(len(CRITICAL), 1) * 100:.0f}%'></i></div><p class='muted'>{critical}/{len(CRITICAL)} critical artifacts present.</p></div>""")
-        st.markdown("### Data deck")
+            render_plot(build_fee_figure(fee), "Fee/Jito орбита ждёт данные", "Загрузи priority_fee_jito_audit.csv.", key="forge_fee_orbit")
+        render_plot(build_daily_calendar_figure(daily), "Календарь PnL ждёт данные", "Загрузи daily_pnl_calendar.csv.", key="forge_daily_calendar")
+        h(f"""<div class='panel'><div class='small'>{hint('artifact', 'СТАТУС RAW-АРТЕФАКТОВ')}</div><div class='progress'><i style='width:{critical / max(len(CRITICAL), 1) * 100:.0f}%'></i></div><p class='muted'>{critical}/{len(CRITICAL)} критических артефактов найдено.</p></div>""")
+        st.markdown("### Дека данных")
         st.dataframe(status, use_container_width=True, hide_index=True)
     with right:
-        h(f"""<div class='panel'><div class='small'>{hint('cluster_map', 'CLUSTER MAP - TOKEN INTERACTIONS')}</div>""")
-        render_plot(build_cluster_figure(swaps, trades), "Cluster map is waiting for raw swaps", "Upload wallet_swaps.csv or trades_paired.csv to build token interaction graph.", key="forge_cluster_map")
+        h(f"""<div class='panel'><div class='small'>{hint('cluster_map', 'КАРТА КЛАСТЕРОВ · ВЗАИМОДЕЙСТВИЕ С ТОКЕНАМИ')}</div>""")
+        render_plot(build_cluster_figure(swaps, trades), "Карта кластеров ждёт raw swaps", "Загрузи wallet_swaps.csv или trades_paired.csv.", key="forge_cluster_map")
         h("</div>")
-        h(f"""<div class='panel'><div class='small'>{hint('signal_card', 'PRE-BUY SIGNAL CARDS')}</div><p class='muted'>Cards are sorted by available score/status. PASS is support, not a buy command.</p></div>""")
+        h(f"""<div class='panel'><div class='small'>{hint('signal_card', 'PRE-BUY КАРТОЧКИ СИГНАЛОВ')}</div><p class='muted'>Карточки сортируются по score/status. PASS — поддержка гипотезы, не команда покупки.</p></div>""")
         render_signal_cards(triggers)
 
 
@@ -380,56 +360,56 @@ def show_dataset(name: str) -> None:
     df = local_df(name)
     st.markdown(f"### {LABELS.get(name, name)}")
     if df.empty:
-        empty(f"{LABELS.get(name, name)} missing", "Upload CSV, load a Supabase run, or run the pipeline.")
+        empty(f"{LABELS.get(name, name)} отсутствует", "Загрузи CSV, подтяни Supabase run или запусти pipeline.")
         return
     c1, c2, c3 = st.columns(3)
-    c1.metric("Rows", len(df))
-    c2.metric("Columns", len(df.columns))
-    c3.metric("Source", "upload/supabase/local")
+    c1.metric("Строки", len(df))
+    c2.metric("Колонки", len(df.columns))
+    c3.metric("Источник", "upload/supabase/local")
     if name == "daily_pnl_calendar":
-        render_plot(build_daily_calendar_figure(df), "Daily calendar unavailable", "Expected date and pnl columns were not found.", key=f"dataset_{name}_calendar")
+        render_plot(build_daily_calendar_figure(df), "Календарь недоступен", "Не найдены date и pnl columns.", key=f"dataset_{name}_calendar")
     elif name == "priority_fee_jito_audit":
-        render_plot(build_fee_figure(df), "Fee/Jito chart unavailable", "Expected verdict/Jito/ComputeBudget columns were not found.", key=f"dataset_{name}_fee")
+        render_plot(build_fee_figure(df), "Fee/Jito график недоступен", "Не найдены verdict/Jito/ComputeBudget columns.", key=f"dataset_{name}_fee")
     elif name in {"trigger_tests", "entry_exit_hypothesis_tests"}:
-        render_plot(build_trigger_radar_figure(df), "Trigger radar unavailable", "Expected trigger/status columns were not found.", key=f"dataset_{name}_radar")
+        render_plot(build_trigger_radar_figure(df), "Радар триггеров недоступен", "Не найдены trigger/status columns.", key=f"dataset_{name}_radar")
         render_signal_cards(df)
     elif name in {"wallet_swaps", "trades_paired"}:
-        render_plot(build_cluster_figure(df, pd.DataFrame()), "Cluster chart unavailable", "Expected token/mint columns were not found.", key=f"dataset_{name}_cluster")
+        render_plot(build_cluster_figure(df, pd.DataFrame()), "Карта кластеров недоступна", "Не найдены token/mint columns.", key=f"dataset_{name}_cluster")
     table(df, name)
 
 
 def upload() -> None:
-    st.markdown("### Upload run artifacts")
+    st.markdown("### Загрузка артефактов run")
     files = st.file_uploader("CSV / MD / JSON / TXT", type=["csv", "md", "markdown", "json", "txt"], accept_multiple_files=True)
     parsed: dict[str, dict[str, Any]] = {}
     if not files and not uploaded():
-        empty("No files uploaded yet", "Download GitHub Actions artifact and upload CSV/MD files here, or load a run through Supabase Bridge.")
+        empty("Файлы ещё не загружены", "Скачай GitHub Actions artifact и загрузи CSV/MD сюда или подтяни run через Data Bridge.")
         return
     for file in files or []:
         data = file.getvalue()
         text = data.decode("utf-8", errors="replace")
         fmt = "csv" if file.name.endswith(".csv") else ("markdown" if file.name.endswith((".md", ".markdown")) else "text")
         auto = next((t for t in KNOWN_TYPES if t != "other" and t in file.name.replace("-", "_")), "other")
-        selected = st.selectbox(f"Type: {file.name}", KNOWN_TYPES, index=KNOWN_TYPES.index(auto), key=f"type_{file.name}_{hashlib.sha256(data).hexdigest()[:8]}", format_func=lambda x: LABELS.get(x, x))
+        selected = st.selectbox(f"Тип: {file.name}", KNOWN_TYPES, index=KNOWN_TYPES.index(auto), key=f"type_{file.name}_{hashlib.sha256(data).hexdigest()[:8]}", format_func=lambda x: LABELS.get(x, x))
         rows = len(df_from_text(text)) if fmt == "csv" else 0
         parsed[selected] = {"file": file.name, "format": fmt, "rows": rows, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "text": text}
     if parsed:
         st.session_state["sf_uploaded"] = parsed
     if uploaded():
-        st.dataframe(pd.DataFrame([{"Type": LABELS.get(k, k), "Code": k, "File": v.get("file"), "Rows": v.get("rows"), "Bytes": v.get("bytes"), "SHA256": v.get("sha256")} for k, v in uploaded().items()]), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame([{"Тип": LABELS.get(k, k), "Код": k, "Файл": v.get("file"), "Строк": v.get("rows"), "Байт": v.get("bytes"), "SHA256": v.get("sha256")} for k, v in uploaded().items()]), use_container_width=True, hide_index=True)
 
 
 def reports() -> None:
     uploaded_reports = {k: str(v.get("text") or "") for k, v in uploaded().items() if v.get("format") in {"markdown", "text"}}
     if uploaded_reports:
-        selected = st.selectbox("Uploaded report", sorted(uploaded_reports), format_func=lambda x: LABELS.get(x, x))
+        selected = st.selectbox("Загруженный отчёт", sorted(uploaded_reports), format_func=lambda x: LABELS.get(x, x))
         st.markdown(uploaded_reports[selected])
         return
     paths = sorted(REPORTS_DIR.glob("*.md")) if REPORTS_DIR.exists() else []
     if not paths:
-        empty("Markdown reports missing", "Upload .md from artifact or run report builders.")
+        empty("Markdown-отчёты отсутствуют", "Загрузи .md из artifact или запусти report builders.")
         return
-    selected = st.selectbox("Report", [str(p.relative_to(ROOT)) for p in paths])
+    selected = st.selectbox("Отчёт", [str(p.relative_to(ROOT)) for p in paths])
     st.markdown((ROOT / selected).read_text(encoding="utf-8", errors="replace"))
 
 
@@ -442,7 +422,7 @@ def guide_and_agent() -> None:
 def main() -> None:
     inject_css()
     hero()
-    tabs = st.tabs(["Signal Forge", "Guide/Agent", "Raw", "FIFO", "Daily PnL", "Fee/Jito", "Triggers", "Reports", "Upload"])
+    tabs = st.tabs(["Кузница сигналов", "Гайд / Агент", "Raw", "FIFO", "PnL по дням", "Fee/Jito", "Триггеры", "Отчёты", "Загрузка"])
     with tabs[0]:
         command_center()
     with tabs[1]:
