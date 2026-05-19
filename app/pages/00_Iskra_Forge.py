@@ -10,6 +10,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+from _agentic_layer import glossary_css, hint, render_agent_panel, render_onboarding
+
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "data" / "processed"
 REPORTS_DIR = ROOT / "reports"
@@ -44,19 +46,15 @@ EMBER = "#FF6A1A"
 VIOLET = "#7A5CFF"
 CYAN = "#00E6FF"
 MINT = "#00FFC2"
-PANEL = "rgba(10,15,26,0.66)"
 TEXT = "#F5EFE2"
 MUTED = "#9CA8B7"
 
-# Keep page_icon omitted: Streamlit validates icons strictly in deployed navigation.
 st.set_page_config(page_title="membot - Iskra Forge", layout="wide", initial_sidebar_state="expanded")
 
-# The full visual/CSS shell is intentionally compacted in this patch: the data
-# logic below is the source of truth for live widgets. Styling remains provided
-# by the merged Iskra Forge theme and .streamlit/config.toml.
 
 def inject_css() -> None:
-    st.markdown("""
+    st.markdown(
+        """
     <style>
     :root{--gold:#FFC36B;--ember:#FF6A1A;--violet:#7A5CFF;--cyan:#00E6FF;--mint:#00FFC2;--muted:#9CA8B7}
     html,body,[data-testid="stAppViewContainer"]{color:#F5EFE2;background:radial-gradient(circle at 4% 8%,rgba(255,195,107,.14),transparent 22%),radial-gradient(circle at 73% 0%,rgba(0,230,255,.14),transparent 24%),linear-gradient(180deg,#020305 0%,#070b12 46%,#05070d 100%)}
@@ -68,8 +66,11 @@ def inject_css() -> None:
     .title{font-size:clamp(2rem,4vw,3.45rem);line-height:.94;color:#FFF4D9;margin:.2rem 0}.kicker,.small{color:var(--gold);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem;font-weight:800}.muted{color:var(--muted)}
     .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.chip{border:1px solid rgba(148,163,184,.24);border-radius:999px;padding:7px 11px;background:rgba(11,14,20,.55);font-size:.78rem;color:#E9DECA}.ok{border-color:rgba(0,255,194,.34);color:#9FFFE9}.warn{border-color:rgba(255,195,107,.42);color:#FFD99A}.violet{border-color:rgba(122,92,255,.42);color:#CBBFFF}.hot{border-color:rgba(255,106,26,.42);color:#FFC0A0}
     .panel,.empty,.signal-card{padding:16px 18px;margin-bottom:14px}.empty{border-style:dashed;border-color:rgba(255,195,107,.38)}.signal-card h4{margin:.1rem 0 .3rem;color:#FFF4D9}.signal-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.signal-bar{height:6px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-top:10px}.signal-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--mint),var(--gold));border-radius:999px}.progress{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}.progress i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--mint),var(--gold))}
-    </style>
-    """, unsafe_allow_html=True)
+    """
+        + glossary_css()
+        + "</style>",
+        unsafe_allow_html=True,
+    )
 
 
 def h(body: str) -> None:
@@ -163,7 +164,7 @@ def hero() -> None:
     <div class='hero'>
       <div class='kicker'>SIGNAL FORGE - SOLANA MEME INTELLIGENCE</div>
       <div class='title'>raw truth<br/>before copy</div>
-      <p class='muted'>Forensic interface for wallet reverse-engineering: signatures, FIFO, fee/Jito audit, controls, and pre-buy hypotheses.</p>
+      <p class='muted'>Forensic interface for wallet reverse-engineering: {hint('signature', 'signatures')}, {hint('fifo', 'FIFO')}, {hint('jito', 'fee/Jito audit')}, controls, and {hint('trigger', 'pre-buy hypotheses')}.</p>
       <div class='badges'><span class='chip ok'>Read-only</span><span class='chip violet'>Target {short}</span><span class='chip warn'>Dashboard != SoT</span><span class='chip hot'>No blind copytrade</span></div>
     </div>
     """)
@@ -332,17 +333,22 @@ def render_plot(fig: go.Figure | None, title: str, body: str, key: str) -> None:
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False, "responsive": True}, key=key)
 
 
-def command_center() -> None:
+def get_current_frames() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     status = status_df()
-    found = int(status["Found"].sum())
-    expected = len(status)
-    critical = int(status[status["Code"].isin(CRITICAL)]["Found"].sum())
-    coverage = found / max(expected, 1)
     swaps = local_df("wallet_swaps")
     trades = local_df("trades_paired")
     daily = local_df("daily_pnl_calendar")
     fee = local_df("priority_fee_jito_audit")
     triggers = trigger_source_df()
+    return status, swaps, trades, daily, fee, triggers
+
+
+def command_center() -> None:
+    status, swaps, trades, daily, fee, triggers = get_current_frames()
+    found = int(status["Found"].sum())
+    expected = len(status)
+    critical = int(status[status["Code"].isin(CRITICAL)]["Found"].sum())
+    coverage = found / max(expected, 1)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Artifacts", f"{found}/{expected}")
     c2.metric("Critical raw", f"{critical}/{len(CRITICAL)}")
@@ -359,14 +365,14 @@ def command_center() -> None:
         with chart_cols[1]:
             render_plot(build_fee_figure(fee), "Fee/Jito orbit is waiting for data", "Upload priority_fee_jito_audit.csv.", key="forge_fee_orbit")
         render_plot(build_daily_calendar_figure(daily), "Daily calendar is waiting for data", "Upload daily_pnl_calendar.csv to render the heatmap.", key="forge_daily_calendar")
-        h(f"""<div class='panel'><div class='small'>RAW ARTIFACT STATUS</div><div class='progress'><i style='width:{critical / max(len(CRITICAL), 1) * 100:.0f}%'></i></div><p class='muted'>{critical}/{len(CRITICAL)} critical artifacts present.</p></div>""")
+        h(f"""<div class='panel'><div class='small'>{hint('artifact', 'RAW ARTIFACT STATUS')}</div><div class='progress'><i style='width:{critical / max(len(CRITICAL), 1) * 100:.0f}%'></i></div><p class='muted'>{critical}/{len(CRITICAL)} critical artifacts present.</p></div>""")
         st.markdown("### Data deck")
         st.dataframe(status, use_container_width=True, hide_index=True)
     with right:
-        h("""<div class='panel'><div class='small'>CLUSTER MAP - TOKEN INTERACTIONS</div>""")
+        h(f"""<div class='panel'><div class='small'>{hint('cluster_map', 'CLUSTER MAP - TOKEN INTERACTIONS')}</div>""")
         render_plot(build_cluster_figure(swaps, trades), "Cluster map is waiting for raw swaps", "Upload wallet_swaps.csv or trades_paired.csv to build token interaction graph.", key="forge_cluster_map")
         h("</div>")
-        h("""<div class='panel'><div class='small'>PRE-BUY SIGNAL CARDS</div><p class='muted'>Cards are sorted by available score/status. PASS is support, not a buy command.</p></div>""")
+        h(f"""<div class='panel'><div class='small'>{hint('signal_card', 'PRE-BUY SIGNAL CARDS')}</div><p class='muted'>Cards are sorted by available score/status. PASS is support, not a buy command.</p></div>""")
         render_signal_cards(triggers)
 
 
@@ -427,26 +433,34 @@ def reports() -> None:
     st.markdown((ROOT / selected).read_text(encoding="utf-8", errors="replace"))
 
 
+def guide_and_agent() -> None:
+    status, swaps, trades, daily, fee, triggers = get_current_frames()
+    render_onboarding(status)
+    render_agent_panel(status, swaps, trades, daily, fee, triggers)
+
+
 def main() -> None:
     inject_css()
     hero()
-    tabs = st.tabs(["Signal Forge", "Raw", "FIFO", "Daily PnL", "Fee/Jito", "Triggers", "Reports", "Upload"])
+    tabs = st.tabs(["Signal Forge", "Guide/Agent", "Raw", "FIFO", "Daily PnL", "Fee/Jito", "Triggers", "Reports", "Upload"])
     with tabs[0]:
         command_center()
     with tabs[1]:
-        show_dataset("wallet_swaps")
+        guide_and_agent()
     with tabs[2]:
-        show_dataset("trades_paired")
+        show_dataset("wallet_swaps")
     with tabs[3]:
-        show_dataset("daily_pnl_calendar")
+        show_dataset("trades_paired")
     with tabs[4]:
-        show_dataset("priority_fee_jito_audit")
+        show_dataset("daily_pnl_calendar")
     with tabs[5]:
+        show_dataset("priority_fee_jito_audit")
+    with tabs[6]:
         show_dataset("trigger_tests")
         show_dataset("entry_exit_hypothesis_tests")
-    with tabs[6]:
-        reports()
     with tabs[7]:
+        reports()
+    with tabs[8]:
         upload()
 
 
