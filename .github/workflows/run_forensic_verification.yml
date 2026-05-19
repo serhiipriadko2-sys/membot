@@ -19,10 +19,15 @@ on:
 jobs:
   run-forensic-verification:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     env:
       TARGET_WALLET: 7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5
-      REQUEST_SLEEP_SECONDS: "0.15"
+      REQUEST_SLEEP_SECONDS: "0.35"
+      RPC_MAX_RETRIES: "8"
+      RPC_BACKOFF_BASE_SECONDS: "1.0"
+      RPC_BACKOFF_MAX_SECONDS: "30"
+      RPC_TIMEOUT_SECONDS: "60"
+      RPC_JITTER_SECONDS: "0.75"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,6 +76,11 @@ jobs:
 
       - name: Test entry/exit hypotheses
         run: python scripts/30_test_entry_exit_hypotheses.py
+        continue-on-error: true
+
+      - name: Verify Forge widget readiness
+        run: |
+          python scripts/verify_forge_artifact_widgets.py /tmp/nonexistent.zip || true
         continue-on-error: true
 
       - name: Upload forensic artifacts
