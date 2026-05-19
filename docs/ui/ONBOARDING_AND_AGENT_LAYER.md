@@ -1,69 +1,96 @@
-# Onboarding and agent layer
+# Онбординг и агентурный слой
 
-## Problem
-The app has many specialized terms: raw, signature, FIFO, PnL, Jito, priority fee, trigger, coverage, SoT, verdict. New users can see charts but not understand what each term means or what action is safe.
+## Проблема
 
-## Decision
-Add an in-app onboarding and agent layer inside Iskra Forge, not as another top-level Streamlit page.
+В приложении много специальных терминов: raw, signature, FIFO, PnL, Jito, priority fee, trigger, coverage, SoT, verdict, cluster_context, repeat_wave, price_action, cross_chain_regime.
 
-## UI additions
+Если пользователь видит график, но не понимает термин, график превращается в шум. Если пользователь видит PASS и воспринимает это как BUY, это уже риск.
 
-### Mini term hints
-Terms can be rendered with a small translucent `?` marker.
-Clicking it opens a compact explanation:
-- simple meaning
-- why it matters in this project
+## Решение
 
-Implementation uses HTML `<details>` blocks rendered through Streamlit markdown. This avoids adding a new dependency and works inside existing text/cards.
+Основной пользовательский слой приложения должен быть на русском языке.
 
-### Guide/Agent tab
-A new internal tab is added inside Iskra Forge:
-- onboarding cards
-- FAQ
-- glossary search
-- agent chat
-- agent architecture expander
+Онбординг встроен внутрь Iskra Forge как вкладка `Гайд / Агент`, а не как новая верхнеуровневая Streamlit page.
 
-## Agentic layer v1
-This is a read-only, deterministic agent layer. It does not call external LLM APIs yet.
+## UI
 
-Agents/modes:
-- Onboarding Agent — explains terms and flow
-- Data QA Agent — checks artifact readiness and missing critical files
-- Fee/Jito Agent — explains fee/Jito/ComputeBudget state
-- Trigger Agent — explains trigger hypotheses and why PASS is not BUY
-- Verdict Guard — keeps claims at UNKNOWN/PARTIAL when evidence is weak
+### Мини-подсказки
 
-## Boundaries
-- No BUY/SELL output
-- No secret storage
-- No wallet private keys
-- No mutation of Supabase or GitHub from the chat agent
-- Memory is only Streamlit `session_state` in v1
+Термины получают маленький полупрозрачный значок `?`.
+При клике раскрывается карточка:
+- название термина;
+- простое объяснение;
+- зачем термин нужен в membot.
 
-## Why not full autonomous trading agent?
-Because the project goal is forensic/reverse-engineering. Agentic UI can help read and verify evidence, but it must not become an execution layer.
+Подсказка должна быть читаемой: светлый заголовок, контрастный body text, тёплая строка `why`, высокий z-index.
 
-## Future v2
-- Optional OpenAI/Agents SDK mode behind explicit environment flag
-- AgentMemory recall for past run explanations, still below repo/artifacts in Truth Ladder
-- Tool registry with read-only tools:
-  - summarize_artifacts
-  - explain_term
-  - inspect_fee_jito
-  - inspect_green_days
-  - propose_next_run
-- Persistent run notes in Supabase, never secrets
+### Вкладки
+
+- `Кузница сигналов` — главный обзор.
+- `Гайд / Агент` — FAQ, словарь, агент.
+- `Raw` — сырые swaps/transaction-derived rows.
+- `FIFO` — paired trades и учёт входов/выходов.
+- `PnL по дням` — календарь прибыли/убытка.
+- `Fee/Jito` — priority fee, ComputeBudget, Jito evidence.
+- `Триггеры` — pre-buy и entry/exit hypotheses.
+- `Отчёты` — markdown reports.
+- `Загрузка` — upload артефактов.
+
+## Термины, которые должны быть в словаре
+
+- `cluster_context` — окружение токена, соседние сделки, похожие кошельки, режим рынка.
+- `repeat_wave` — повторная волна похожей активности.
+- `price_action` — поведение цены до и после входа.
+- `cross_chain_regime` — режим, где импульс может прийти из другой сети или рынка.
+- `Entry/exit hypotheses` — проверяемые предположения входа и выхода.
+
+## Агентурный слой v2
+
+Агент изучает, анализирует, учится на прогонах, оценивает вероятность поддержки гипотезы, уведомляет о рисках, собирает информацию и предлагает следующий research-step.
+
+Он не выдаёт финансовую рекомендацию, не отдаёт BUY/SELL и всегда показывает риск и цену ошибки.
+
+### Read-only tools
+
+- `summarize_artifacts` — сводка доступных артефактов и строк.
+- `explain_term` — объяснение термина из словаря.
+- `inspect_fee_jito` — Fee/Jito/ComputeBudget разбор.
+- `inspect_green_days` — проверка готовности green-days claim.
+- `estimate_hypothesis_support` — вероятность поддержки гипотезы без BUY/SELL.
+- `risk_price_explainer` — риск и цена ошибки.
+- `propose_next_run` — следующий безопасный run-step.
+
+## Boundary formula
+
+```text
+Агент оценивает вероятность и риск.
+Агент не отдаёт приказ.
+Raw artifacts остаются выше agent output.
+```
 
 ## QA
-PASS if:
-- Guide/Agent tab opens
-- FAQ expanders open
-- glossary search filters terms
-- terms with `?` reveal simple explanations
-- chat agent responds to:
+
+PASS если:
+- интерфейсные вкладки на русском;
+- hero на русском;
+- `?` подсказки читаемые;
+- `cluster_context`, `repeat_wave`, `price_action`, `cross_chain_regime`, `Entry/exit hypotheses` есть в словаре;
+- `Гайд / Агент` открывается;
+- FAQ раскрывается;
+- glossary search фильтрует термины;
+- агент отвечает на:
   - `что дальше?`
   - `объясни FIFO`
-  - `почему daily PnL UNKNOWN?`
   - `проверь fee/Jito`
-- no new top-level sidebar noise appears
+  - `почему daily PnL UNKNOWN?`
+  - `какой риск у trigger?`
+  - `какие инструменты есть?`
+- агент не выдаёт BUY/SELL;
+- sidebar не получает новых top-level pages.
+
+## Future
+
+- Optional OpenAI/Agents SDK mode behind env flag.
+- AgentMemory recall ниже repo/artifacts в Truth Ladder.
+- Persistent run notes в Supabase без секретов.
+- Уведомления только как риск/изменение состояния, не как торговая команда.
