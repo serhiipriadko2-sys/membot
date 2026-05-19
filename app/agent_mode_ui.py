@@ -11,10 +11,11 @@ def _mode_css() -> None:
     st.markdown(
         """
         <style>
-        .agent-mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0}
-        .agent-mode-card{border:1px solid rgba(255,195,107,.17);border-radius:18px;padding:14px 16px;background:linear-gradient(180deg,rgba(13,18,30,.78),rgba(5,8,14,.70));min-height:132px;box-shadow:0 18px 46px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04)}
-        .agent-mode-card b{color:#FFF4D9}.agent-mode-card p{color:#B7C3D1}.agent-mode-card small{display:block;color:#FFC36B;margin-top:.35rem}
-        @media(max-width:900px){.agent-mode-grid{grid-template-columns:1fr}}
+        .agent-mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:12px 0}
+        .agent-mode-card{border:1px solid rgba(255,195,107,.17);border-radius:18px;padding:14px 16px;background:linear-gradient(180deg,rgba(13,18,30,.78),rgba(5,8,14,.70));min-height:260px;box-shadow:0 18px 46px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04)}
+        .agent-mode-card b{display:block;color:#FFF4D9;font-size:1.02rem;line-height:1.25;margin-bottom:.55rem;word-break:normal;overflow-wrap:normal;hyphens:none}.agent-mode-card p{color:#B7C3D1;line-height:1.55;margin:.35rem 0}.agent-mode-card small{display:block;color:#FFC36B;margin-top:.7rem;line-height:1.45}.agent-quick-grid{display:grid;grid-template-columns:repeat(6,minmax(86px,1fr));gap:10px;margin:18px 0 10px}.agent-quick-grid .stButton>button{width:100%;min-height:44px;white-space:nowrap;padding:.45rem .55rem}.agent-help{color:#9CA8B7;font-size:.9rem;margin:.4rem 0 1rem}
+        @media(max-width:900px){.agent-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-mode-card{min-height:230px}.agent-quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+        @media(max-width:560px){.agent-mode-grid{grid-template-columns:1fr}.agent-mode-card{min-height:auto}.agent-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
         </style>
         """,
         unsafe_allow_html=True,
@@ -54,6 +55,7 @@ def render_agent_panel(status: pd.DataFrame, swaps: pd.DataFrame, trades: pd.Dat
     )
     render_active_mode_card(mode)
 
+    st.markdown("<div class='agent-help'>Быстрый запуск режима:</div>", unsafe_allow_html=True)
     quick_cols = st.columns(6)
     for idx, quick_mode in enumerate(AGENT_MODES):
         if quick_cols[idx].button(quick_mode, key=f"agent_quick_{quick_mode}"):
