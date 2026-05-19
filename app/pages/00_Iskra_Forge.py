@@ -48,7 +48,8 @@ PANEL = "rgba(10,15,26,0.66)"
 TEXT = "#F5EFE2"
 MUTED = "#9CA8B7"
 
-st.set_page_config(page_title="membot - Iskra Forge", page_icon="*", layout="wide", initial_sidebar_state="expanded")
+# Keep page_icon omitted: Streamlit validates icons strictly in deployed navigation.
+st.set_page_config(page_title="membot - Iskra Forge", layout="wide", initial_sidebar_state="expanded")
 
 # The full visual/CSS shell is intentionally compacted in this patch: the data
 # logic below is the source of truth for live widgets. Styling remains provided
@@ -324,11 +325,11 @@ def render_signal_cards(triggers: pd.DataFrame) -> None:
     h("".join(cards))
 
 
-def render_plot(fig: go.Figure | None, title: str, body: str) -> None:
+def render_plot(fig: go.Figure | None, title: str, body: str, key: str) -> None:
     if fig is None:
         empty(title, body)
     else:
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False, "responsive": True})
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False, "responsive": True}, key=key)
 
 
 def command_center() -> None:
@@ -354,16 +355,16 @@ def command_center() -> None:
         h(f"""<div class='panel'><div class='small'>WALLET OVERVIEW</div><h3>{TARGET_WALLET[:7]}...{TARGET_WALLET[-5:]}</h3><div class='badges'><span class='chip violet'>Watchlist</span><span class='chip ok'>Read-only</span><span class='chip warn'>Coverage {coverage:.0%}</span></div></div>""")
         chart_cols = st.columns(2)
         with chart_cols[0]:
-            render_plot(build_trigger_radar_figure(triggers), "Trigger radar is waiting for data", "Upload trigger tests or entry/exit hypothesis rows.")
+            render_plot(build_trigger_radar_figure(triggers), "Trigger radar is waiting for data", "Upload trigger tests or entry/exit hypothesis rows.", key="forge_trigger_radar")
         with chart_cols[1]:
-            render_plot(build_fee_figure(fee), "Fee/Jito orbit is waiting for data", "Upload priority_fee_jito_audit.csv.")
-        render_plot(build_daily_calendar_figure(daily), "Daily calendar is waiting for data", "Upload daily_pnl_calendar.csv to render the heatmap.")
+            render_plot(build_fee_figure(fee), "Fee/Jito orbit is waiting for data", "Upload priority_fee_jito_audit.csv.", key="forge_fee_orbit")
+        render_plot(build_daily_calendar_figure(daily), "Daily calendar is waiting for data", "Upload daily_pnl_calendar.csv to render the heatmap.", key="forge_daily_calendar")
         h(f"""<div class='panel'><div class='small'>RAW ARTIFACT STATUS</div><div class='progress'><i style='width:{critical / max(len(CRITICAL), 1) * 100:.0f}%'></i></div><p class='muted'>{critical}/{len(CRITICAL)} critical artifacts present.</p></div>""")
         st.markdown("### Data deck")
         st.dataframe(status, use_container_width=True, hide_index=True)
     with right:
         h("""<div class='panel'><div class='small'>CLUSTER MAP - TOKEN INTERACTIONS</div>""")
-        render_plot(build_cluster_figure(swaps, trades), "Cluster map is waiting for raw swaps", "Upload wallet_swaps.csv or trades_paired.csv to build token interaction graph.")
+        render_plot(build_cluster_figure(swaps, trades), "Cluster map is waiting for raw swaps", "Upload wallet_swaps.csv or trades_paired.csv to build token interaction graph.", key="forge_cluster_map")
         h("</div>")
         h("""<div class='panel'><div class='small'>PRE-BUY SIGNAL CARDS</div><p class='muted'>Cards are sorted by available score/status. PASS is support, not a buy command.</p></div>""")
         render_signal_cards(triggers)
@@ -380,14 +381,14 @@ def show_dataset(name: str) -> None:
     c2.metric("Columns", len(df.columns))
     c3.metric("Source", "upload/supabase/local")
     if name == "daily_pnl_calendar":
-        render_plot(build_daily_calendar_figure(df), "Daily calendar unavailable", "Expected date and pnl columns were not found.")
+        render_plot(build_daily_calendar_figure(df), "Daily calendar unavailable", "Expected date and pnl columns were not found.", key=f"dataset_{name}_calendar")
     elif name == "priority_fee_jito_audit":
-        render_plot(build_fee_figure(df), "Fee/Jito chart unavailable", "Expected verdict/Jito/ComputeBudget columns were not found.")
+        render_plot(build_fee_figure(df), "Fee/Jito chart unavailable", "Expected verdict/Jito/ComputeBudget columns were not found.", key=f"dataset_{name}_fee")
     elif name in {"trigger_tests", "entry_exit_hypothesis_tests"}:
-        render_plot(build_trigger_radar_figure(df), "Trigger radar unavailable", "Expected trigger/status columns were not found.")
+        render_plot(build_trigger_radar_figure(df), "Trigger radar unavailable", "Expected trigger/status columns were not found.", key=f"dataset_{name}_radar")
         render_signal_cards(df)
     elif name in {"wallet_swaps", "trades_paired"}:
-        render_plot(build_cluster_figure(df, pd.DataFrame()), "Cluster chart unavailable", "Expected token/mint columns were not found.")
+        render_plot(build_cluster_figure(df, pd.DataFrame()), "Cluster chart unavailable", "Expected token/mint columns were not found.", key=f"dataset_{name}_cluster")
     table(df, name)
 
 
@@ -429,7 +430,7 @@ def reports() -> None:
 def main() -> None:
     inject_css()
     hero()
-    tabs = st.tabs(["* Signal Forge", "Raw", "FIFO", "Daily PnL", "Fee/Jito", "Triggers", "Reports", "Upload"])
+    tabs = st.tabs(["Signal Forge", "Raw", "FIFO", "Daily PnL", "Fee/Jito", "Triggers", "Reports", "Upload"])
     with tabs[0]:
         command_center()
     with tabs[1]:
