@@ -78,11 +78,6 @@ jobs:
         run: python scripts/30_test_entry_exit_hypotheses.py
         continue-on-error: true
 
-      - name: Verify Forge widget readiness
-        run: |
-          python scripts/verify_forge_artifact_widgets.py /tmp/nonexistent.zip || true
-        continue-on-error: true
-
       - name: Upload forensic artifacts
         uses: actions/upload-artifact@v4
         with:
