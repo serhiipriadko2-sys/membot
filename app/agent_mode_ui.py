@@ -4,18 +4,17 @@ import pandas as pd
 import streamlit as st
 
 import agentic_layer as base
-from agent_modes import AGENT_MODES, agent_mode_reply, mode_lines_markdown, render_active_mode_card, render_mode_cards, route_mode_query
+from agent_modes import AGENT_MODES, agent_mode_reply, mode_lines_markdown, render_active_mode_card, route_mode_query
 
 
 def _mode_css() -> None:
     st.markdown(
         """
         <style>
-        .agent-mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:12px 0}
-        .agent-mode-card{border:1px solid rgba(255,195,107,.17);border-radius:18px;padding:14px 16px;background:linear-gradient(180deg,rgba(13,18,30,.78),rgba(5,8,14,.70));min-height:260px;box-shadow:0 18px 46px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04)}
-        .agent-mode-card b{display:block;color:#FFF4D9;font-size:1.02rem;line-height:1.25;margin-bottom:.55rem;word-break:normal;overflow-wrap:normal;hyphens:none}.agent-mode-card p{color:#B7C3D1;line-height:1.55;margin:.35rem 0}.agent-mode-card small{display:block;color:#FFC36B;margin-top:.7rem;line-height:1.45}.agent-quick-grid{display:grid;grid-template-columns:repeat(6,minmax(86px,1fr));gap:10px;margin:18px 0 10px}.agent-quick-grid .stButton>button{width:100%;min-height:44px;white-space:nowrap;padding:.45rem .55rem}.agent-help{color:#9CA8B7;font-size:.9rem;margin:.4rem 0 1rem}
-        @media(max-width:900px){.agent-mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agent-mode-card{min-height:230px}.agent-quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-        @media(max-width:560px){.agent-mode-grid{grid-template-columns:1fr}.agent-mode-card{min-height:auto}.agent-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        .agent-mode-compact{border:1px solid rgba(255,195,107,.17);border-radius:22px;padding:14px 16px;margin:12px 0;background:linear-gradient(180deg,rgba(13,18,30,.78),rgba(5,8,14,.70));box-shadow:0 18px 46px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04)}
+        .agent-mode-compact p{color:#B7C3D1;line-height:1.55;margin:.25rem 0 .65rem}.agent-mode-compact b{color:#FFF4D9}.agent-mode-run .stButton>button{width:100%;min-height:46px;white-space:normal;border-radius:14px}.agent-help{color:#9CA8B7;font-size:.9rem;margin:.4rem 0 1rem}.agent-mode-legend{display:flex;flex-wrap:wrap;gap:8px;margin:.6rem 0}.agent-mode-legend span{border:1px solid rgba(255,195,107,.18);background:rgba(255,195,107,.06);color:#FFE1A8;border-radius:999px;padding:.22rem .55rem;font-size:.78rem}.agent-mode-details{color:#B7C3D1;font-size:.92rem;line-height:1.5;margin-top:.5rem}
+        div[role='radiogroup']{gap:.35rem!important}div[role='radiogroup'] label{border:1px solid rgba(255,195,107,.18);border-radius:999px;padding:.18rem .48rem;background:rgba(255,195,107,.035)}
+        @media(max-width:560px){.agent-mode-compact{padding:12px 13px}.agent-mode-legend{display:none}div[role='radiogroup']{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem!important}div[role='radiogroup'] label{margin:0!important;min-height:42px;align-items:center}.agent-mode-run .stButton>button{min-height:48px}}
         </style>
         """,
         unsafe_allow_html=True,
@@ -29,6 +28,45 @@ def _route_agent(question: str, ctx: dict, mode: str) -> str:
     if not question.strip():
         return agent_mode_reply(mode, ctx)
     return base.agent_reply(question, ctx)
+
+
+def _select_mode() -> str:
+    labels = list(AGENT_MODES.keys())
+    if hasattr(st, "segmented_control"):
+        selected = st.segmented_control(
+            "Режим агента",
+            labels,
+            selection_mode="single",
+            default=st.session_state.get("agent_mode", "Study"),
+            key="agent_mode_segmented",
+            format_func=lambda key: AGENT_MODES[key]["title"],
+        )
+        mode = selected or st.session_state.get("agent_mode", "Study")
+        st.session_state["agent_mode"] = mode
+        return str(mode)
+    return st.radio(
+        "Режим агента",
+        labels,
+        horizontal=True,
+        key="agent_mode",
+        format_func=lambda key: AGENT_MODES[key]["title"],
+    )
+
+
+def _render_compact_intro(mode: str) -> None:
+    selected = AGENT_MODES[mode]
+    st.markdown(
+        "<div class='agent-mode-legend'>"
+        + "".join([f"<span>{name}</span>" for name in AGENT_MODES])
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"<div class='agent-mode-compact'><b>Компактный режим:</b> {selected['title']}"
+        f"<p>{selected['goal']}</p>"
+        f"<div class='agent-mode-details'><b>Выход:</b> {selected['output']}<br/><b>Граница:</b> {selected['guard']}</div></div>",
+        unsafe_allow_html=True,
+    )
 
 
 def render_agent_panel(status: pd.DataFrame, swaps: pd.DataFrame, trades: pd.DataFrame, daily: pd.DataFrame, fee: pd.DataFrame, triggers: pd.DataFrame) -> None:
@@ -45,23 +83,17 @@ def render_agent_panel(status: pd.DataFrame, swaps: pd.DataFrame, trades: pd.Dat
         unsafe_allow_html=True,
     )
 
-    render_mode_cards()
-    mode = st.radio(
-        "Режим агента",
-        list(AGENT_MODES.keys()),
-        horizontal=True,
-        key="agent_mode",
-        format_func=lambda key: AGENT_MODES[key]["title"],
-    )
+    mode = _select_mode()
+    _render_compact_intro(mode)
     render_active_mode_card(mode)
 
-    st.markdown("<div class='agent-help'>Быстрый запуск режима:</div>", unsafe_allow_html=True)
-    quick_cols = st.columns(6)
-    for idx, quick_mode in enumerate(AGENT_MODES):
-        if quick_cols[idx].button(quick_mode, key=f"agent_quick_{quick_mode}"):
-            st.session_state.setdefault("agent_messages", [])
-            st.session_state.agent_messages.append({"role": "assistant", "content": agent_mode_reply(quick_mode, ctx)})
-            st.rerun()
+    st.markdown("<div class='agent-help'>Запуск выбранного режима:</div>", unsafe_allow_html=True)
+    st.markdown("<div class='agent-mode-run'>", unsafe_allow_html=True)
+    if st.button(f"Запустить {mode}", key="agent_run_selected_mode"):
+        st.session_state.setdefault("agent_messages", [])
+        st.session_state.agent_messages.append({"role": "assistant", "content": agent_mode_reply(mode, ctx)})
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
     if "agent_messages" not in st.session_state:
         st.session_state.agent_messages = [
