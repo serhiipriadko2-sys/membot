@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,12 +38,15 @@ SKIP_SUFFIXES = {
 }
 
 PLACEHOLDER_MARKERS = (
+    "...",
     "example",
     "placeholder",
     "redacted",
     "dummy",
     "changeme",
+    "paste-only",
     "your_",
+    "your-",
     "<",
     ">",
     "${",
@@ -106,7 +108,7 @@ def should_skip(path: Path) -> bool:
 
 
 def is_placeholder(value: str) -> bool:
-    lowered = value.lower()
+    lowered = value.lower().strip().strip("'\"")
     return any(marker in lowered for marker in PLACEHOLDER_MARKERS)
 
 
