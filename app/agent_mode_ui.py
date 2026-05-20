@@ -5,6 +5,7 @@ import streamlit as st
 
 import agentic_layer as base
 from agent_modes import AGENT_MODES, agent_mode_reply, mode_lines_markdown, render_active_mode_card, route_mode_query
+from agent_runtime_qa import render_runtime_qa_panel
 
 
 def _mode_css() -> None:
@@ -94,6 +95,9 @@ def render_agent_panel(status: pd.DataFrame, swaps: pd.DataFrame, trades: pd.Dat
         st.session_state.agent_messages.append({"role": "assistant", "content": agent_mode_reply(mode, ctx)})
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
+
+    with st.expander("Runtime QA Panel", key="agent_runtime_qa_panel"):
+        render_runtime_qa_panel(lambda prompt, qa_mode: _route_agent(prompt, ctx, qa_mode))
 
     if "agent_messages" not in st.session_state:
         st.session_state.agent_messages = [
