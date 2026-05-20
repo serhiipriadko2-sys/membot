@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,10 +33,36 @@ CTX = {
 }
 
 
+class SessionStateStub(dict):
+    """Small Streamlit session_state stand-in for CI.
+
+    Streamlit's session_state supports both item-style and attribute-style
+    access. The Learn mode uses both patterns, so a plain dict is not enough.
+    """
+
+    def __getattr__(self, name: str) -> Any:
+        try:
+            return self[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        self[name] = value
+
+    def __delattr__(self, name: str) -> None:
+        try:
+            del self[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+
+SESSION_STATE = SessionStateStub()
+
+
 def _patch_streamlit_state() -> None:
     # agent_modes.tool_learn_mode uses st.session_state. In CI we do not run
     # through `streamlit run`, so provide a tiny compatible object.
-    agent_modes.st = SimpleNamespace(session_state={})
+    agent_modes.st = SimpleNamespace(session_state=SESSION_STATE)
 
 
 def response_fn(prompt: str, mode: str) -> str:
