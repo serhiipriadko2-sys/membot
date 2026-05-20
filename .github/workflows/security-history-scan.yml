@@ -1,0 +1,35 @@
+name: Security history scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_commits:
+        description: "Optional max commits for debugging. Leave empty for full history."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  history-secret-scan:
+    name: History secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Scan git history for high-risk secrets
+        run: |
+          if [ -n "${{ github.event.inputs.max_commits }}" ]; then
+            python scripts/security_history_scan.py --max-commits "${{ github.event.inputs.max_commits }}"
+          else
+            python scripts/security_history_scan.py
+          fi
