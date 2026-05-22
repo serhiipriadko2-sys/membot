@@ -40,6 +40,7 @@ before proceeding. See `docs/RPC_PROVIDER_STRATEGY.md`.
 27_enrich_entry_context_market.py # Join market context onto entry context
 28_build_helius_enrichment.py    # Parse local Helius enhanced tx export
 29_test_market_triggers.py       # Test market-wide context against control anchors
+33_test_dune_aggregate_context.py # Test precomputed Dune aggregate entry/control context
 ```
 
 ## Pre-entry context study
@@ -106,6 +107,18 @@ No enrichment script stores API keys or performs live vendor API calls.
 
 See `docs/ENTRY_CONTEXT_PROTOCOL.md` and `docs/MARKET_WIDE_ENRICHMENT_PROTOCOL.md`
 for leakage rules, feature metadata, and market-wide limitations.
+
+## Dune aggregate context
+
+If the Dune export already contains anchor-level aggregate fields such as
+`trade_count_300s`, `volume_accel_60_300`, and `crescendo_*`, use:
+
+```bash
+python scripts/33_test_dune_aggregate_context.py --input result.csv
+```
+
+This path validates aggregate entry/control separation only. It is not raw
+wallet accounting and is not a trading signal.
 
 ## Dune export template
 
