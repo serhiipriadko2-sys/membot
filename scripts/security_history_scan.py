@@ -20,14 +20,37 @@ class HistoryFinding:
     sample: str
 
 
+@dataclass(frozen=True)
+class HistoryObject:
+    object_id: str
+    path: str
+
+
+MAX_BLOB_BYTES = 2_000_000
+SKIP_TOP_LEVEL_DIRS = {"data", "output"}
+
+
+def decode_stream(value: bytes | str | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    return value.decode("utf-8", errors="replace")
+
+
 def run_git(args: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
+    result = subprocess.run(
         ["git", *args],
         cwd=ROOT,
         check=check,
-        text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+    )
+    return subprocess.CompletedProcess(
+        args=result.args,
+        returncode=result.returncode,
+        stdout=decode_stream(result.stdout),
+        stderr=decode_stream(result.stderr),
     )
 
 
@@ -41,6 +64,8 @@ def commit_list(limit: int | None = None) -> list[str]:
 
 def should_skip_path(path: str) -> bool:
     p = Path(path)
+    if p.parts and p.parts[0] in SKIP_TOP_LEVEL_DIRS:
+        return True
     if p.suffix.lower() in security_scan.SKIP_SUFFIXES:
         return True
     if any(part in security_scan.SKIP_DIRS for part in p.parts):
@@ -60,8 +85,73 @@ def file_text_at_commit(commit: str, path: str) -> str:
     return result.stdout
 
 
-def scan_text(commit: str, path: str, text: str) -> list[HistoryFinding]:
+def parse_history_objects(raw: str) -> list[HistoryObject]:
+    objects: list[HistoryObject] = []
+    seen_objects: set[str] = set()
+    for line in raw.splitlines():
+        if not line.strip() or " " not in line:
+            continue
+        object_id, path = line.split(" ", 1)
+        path = path.strip()
+        if not object_id or not path:
+            continue
+        if object_id in seen_objects or should_skip_path(path):
+            continue
+        seen_objects.add(object_id)
+        objects.append(HistoryObject(object_id=object_id, path=path))
+    return objects
+
+
+def history_objects(limit: int | None = None) -> list[HistoryObject]:
+    if limit:
+        objects: list[HistoryObject] = []
+        seen_objects: set[str] = set()
+        for commit in commit_list(limit):
+            result = run_git(["ls-tree", "-r", commit])
+            for line in result.stdout.splitlines():
+                if "\t" not in line:
+                    continue
+                meta, path = line.split("\t", 1)
+                parts = meta.split()
+                if len(parts) < 3:
+                    continue
+                object_id = parts[2]
+                if object_id in seen_objects or should_skip_path(path):
+                    continue
+                seen_objects.add(object_id)
+                objects.append(HistoryObject(object_id=object_id, path=path))
+        return objects
+    return parse_history_objects(run_git(["rev-list", "--objects", "--all"]).stdout)
+
+
+def object_text(object_id: str) -> str:
+    size_result = run_git(["cat-file", "-s", object_id], check=False)
+    if size_result.returncode != 0:
+        return ""
+    try:
+        size = int(size_result.stdout.strip())
+    except ValueError:
+        return ""
+    if size > MAX_BLOB_BYTES:
+        return ""
+    result = run_git(["cat-file", "-p", object_id], check=False)
+    if result.returncode != 0:
+        return ""
+    return result.stdout
+
+
+def first_commit_for_object(object_id: str) -> str:
+    result = run_git(["log", "--all", f"--find-object={object_id}", "--format=%H", "-n", "1"], check=False)
+    if result.returncode != 0:
+        return f"object:{object_id[:12]}"
+    commit = next((line.strip() for line in result.stdout.splitlines() if line.strip()), "")
+    return commit[:12] if commit else f"object:{object_id[:12]}"
+
+
+def scan_text(commit: str, path: str, text: str | None) -> list[HistoryFinding]:
     findings: list[HistoryFinding] = []
+    if text is None:
+        return findings
     if "\x00" in text:
         return findings
     for line_no, line in enumerate(text.splitlines(), start=1):
@@ -88,11 +178,20 @@ def scan_text(commit: str, path: str, text: str) -> list[HistoryFinding]:
 
 def scan_history(limit: int | None = None) -> list[HistoryFinding]:
     findings: list[HistoryFinding] = []
-    commits = commit_list(limit)
-    for idx, commit in enumerate(commits, start=1):
-        print(f"[scan] commit {idx}/{len(commits)} {commit[:12]}")
-        for path in files_at_commit(commit):
-            findings.extend(scan_text(commit, path, file_text_at_commit(commit, path)))
+    objects = history_objects(limit)
+    for idx, obj in enumerate(objects, start=1):
+        print(f"[scan] object {idx}/{len(objects)} {obj.object_id[:12]} {obj.path}")
+        object_findings = scan_text(obj.object_id[:12], obj.path, object_text(obj.object_id))
+        for finding in object_findings:
+            findings.append(
+                HistoryFinding(
+                    commit=first_commit_for_object(obj.object_id),
+                    path=finding.path,
+                    line_no=finding.line_no,
+                    pattern=finding.pattern,
+                    sample=finding.sample,
+                )
+            )
     return findings
 
 
