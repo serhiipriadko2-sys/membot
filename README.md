@@ -2,114 +2,113 @@
 
 Research scaffold for reverse-engineering and validating a high-frequency Solana meme-trading wallet.
 
-Status:
-- READY FOR DATASET BUILD
-- READY FOR ENTRY-VS-CONTROL VALIDATION HARNESS
-- NOT READY FOR FINAL ALGORITHM CLAIM
-- NOT A TRADING BOT
+## Current status — 2026-05-23
 
-## Purpose
+```text
+RESEARCH: PASS
+MARKET_FLOW_TRIGGER: PASS
+FULL_TAPE_COVERAGE: PASS
+EXIT_RULE_LAB: PASS
+LATENCY_WARNING: PASS
+LIVE_ALPHA: NOT VERIFIED
+TRADING_BOT: FORBIDDEN UNTIL OBSERVER/PAPER PASS
+```
 
-This repository builds a reproducible forensic pipeline around raw Solana transaction data.
-It is not a claim that the target wallet's algorithm has been decoded.
+This repository is not a trading bot. It is a forensic and execution-lab workspace.
 
 ## Current target
 
 Wallet:
-- `7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5`
 
-Working hypotheses:
-- H1: the wallet behaves like a short-horizon scalper.
-- H2: a large part of the edge sits in ultra-small-cap setups.
-- H3: a meaningful part of the edge comes from execution quality and low latency.
-- H4: entries are driven by observable event triggers rather than random timing.
+```text
+7BNaxx6KdUYrjACNQZ9He26NBFoFxujQMAfNLnArLGH5
+```
 
-2026 research expansion:
-- H11: VPIN / toxicity surge.
-- H12: graduation / bonding-curve crescendo.
-- H13: regime-aware momentum.
-- H14: reflexivity / feedback inflection.
+## Current strongest conclusion
 
-These are hypotheses until validated against controls.
+The strongest current candidate is `crescendo_fast_10_p90`, also called **Fast10**.
+
+It identifies extreme 10-second volume acceleration before entry. Full market-tape testing shows the signal is a plausible micro-alpha candidate only if execution is very fast and the exit rule is strict.
+
+Correct wording:
+
+```text
+MICRO-ALPHA CANDIDATE DETECTED IN LAB; LIVE ALPHA NOT VERIFIED.
+```
+
+Do not use:
+
+```text
+ALPHA DECODED
+MISSION COMPLETE
+READY TO TRADE
+```
+
+## Key evidence
+
+| Layer | Current result |
+|---|---:|
+| Rule-hit export | 4000 anchors = 1000 entries + 3000 controls |
+| Fast10 signals | 274 |
+| Full post-signal market tape | 53649 rows |
+| Full tape evaluable coverage | 267 / 274 = 97.45% |
+| Walk-forward at 100/100 bps | mean positive, median negative |
+| Best exit-rule lab row | TP +5%, SL -20%, TS 300s |
+| Best exit-rule median | +4.06% |
+| Best exit-rule winrate | 58.21% |
+| Latency cliff | edge breaks at ~0.5s in current lab model |
+
+## Working documents
+
+- `reports/PROJECT_CONTEXT_UPDATE_2026-05-23.md` — current source-of-truth update.
+- `reports/STAS_FINAL_REPORT_7BN.md` — handoff report for Stas.
+- `docs/FAST10_EXECUTION_LAB.md` — execution-lab protocol and gates.
+- `docs/SUPABASE_SYNC_STATUS.md` — Supabase migration/sync status.
+- `supabase/migrations/20260523000000_execution_lab_research_registry.sql` — proposed metadata registry migration.
+- `reports/research_dossier_2026-05-22.md` — earlier audit dossier.
 
 ## Source of truth
 
-Do not use dashboard screenshots or third-party summaries as final truth.
-Source of truth for claims in this repo should be:
+Do not use dashboard screenshots or third-party summaries as final truth. Source of truth for claims in this repo should be:
 
 1. Raw transaction exports.
 2. Reproducible parsers and pairing logic.
 3. Generated dataset artifacts.
 4. Entry-vs-control validation reports.
-5. Manual audit of ambiguous rows.
-6. External dashboards only as hints, never as final proof.
+5. Market-tape walk-forward results.
+6. Exit-rule and latency-decay sweeps.
+7. Manual audit of ambiguous rows.
+8. External dashboards only as hints, never as final proof.
 
-## Pipeline layers
+## Next step
 
-Core accounting:
-
-```text
-raw signatures
-raw transactions
-wallet_swaps.csv
-trades_paired.csv
-fee / inventory / latency reports
-```
-
-Pre-buy causality:
+Build **Fast10 Observer**:
 
 ```text
-price_series.csv
-entry_context.csv
-control_points.csv
-trigger_tests.csv
-cluster_context.csv
-cross_chain_context.csv
-cluster_trigger_tests.csv
-cross_chain_trigger_tests.csv
+live stream -> Fast10 detect -> quote -> latency log -> observer_latency_live.csv
 ```
 
-Research discipline:
+No private key. No signing. No live trading.
+
+PASS for moving to Paper Execution:
 
 ```text
-source_audit -> feature_manifest -> schema contracts -> validation reports
+p50 signal_to_quote_ms < 500
+p90 signal_to_quote_ms < 1000
+quote coverage >= 90%
+no private keys
+complete audit log
 ```
-
-## Current working documents
-
-- `docs/PROTOCOL.md` — research protocol and evidence discipline.
-- `docs/ENTRY_CONTEXT_PROTOCOL.md` — leakage-safe entry-context and controls.
-- `docs/RESEARCH_2026_NOTES.md` — synthesis from the 2026 pre-buy report.
-- `docs/SOURCE_AUDIT_2026.md` — source-audit register: verified / partial / pending.
-- `docs/QC_FINDINGS.md` — current limitations and non-claims.
-- `tasks/RESEARCH_BACKLOG_2026.md` — next tasks for research-grade validation.
-- `configs/prebuy_feature_manifest.yaml` — implemented and planned features.
-- `schemas/` — output contracts.
-
-## Definition of done: trigger claim
-
-A trigger claim is not accepted until it has:
-
-- feature row in `configs/prebuy_feature_manifest.yaml`;
-- schema coverage where applicable;
-- `entry_context.csv` or context-specific equivalent;
-- matched `control_points.csv` or derived control anchors;
-- `trigger_tests.csv` / context-specific validation output;
-- coverage report;
-- explicit verdict: PASS / PARTIAL / NO_SIGNAL / UNKNOWN / FAIL;
-- no use of future data;
-- no production claim without out-of-sample, latency, fee, and slippage checks.
 
 ## Non-claims
 
 This repository does not currently prove:
 
-- exact algorithm logic;
-- Jito bundle usage;
-- block-order advantage;
-- signal source provenance;
-- social/off-chain signal provenance;
+- exact target-wallet algorithm;
+- Jito bundle usage by the target wallet;
 - final profitability under copied execution;
-- any trigger discovered from the 2026 research report.
+- live execution edge;
+- safety of real-money deployment;
+- production readiness.
 
 The preferred default is explicit `UNKNOWN`, not confident fiction.
