@@ -63,8 +63,10 @@ READY TO TRADE
 - `reports/PROJECT_CONTEXT_UPDATE_2026-05-23.md` — current source-of-truth update.
 - `reports/STAS_FINAL_REPORT_7BN.md` — handoff report for Stas.
 - `docs/FAST10_EXECUTION_LAB.md` — execution-lab protocol and gates.
+- `docs/FAST10_OBSERVER.md` — no-key observer workflow and input/output contract.
 - `docs/SUPABASE_SYNC_STATUS.md` — Supabase migration/sync status.
 - `supabase/migrations/20260523000000_execution_lab_research_registry.sql` — proposed metadata registry migration.
+- `scripts/fast10_observer.py` — observer harness for signal -> Jupiter quote latency.
 - `reports/research_dossier_2026-05-22.md` — earlier audit dossier.
 
 ## Source of truth
@@ -88,7 +90,23 @@ Build **Fast10 Observer**:
 live stream -> Fast10 detect -> quote -> latency log -> observer_latency_live.csv
 ```
 
+Current repo status:
+
+```text
+observer harness: READY
+live detector-emitter: NEXT
+paper execution: BLOCKED UNTIL OBSERVER PASS
+```
+
 No private key. No signing. No live trading.
+
+Current command:
+
+```bash
+python scripts/fast10_observer.py \
+  --input data/processed/fast10_live_candidates.csv \
+  --output data/processed/observer_latency_live.csv
+```
 
 PASS for moving to Paper Execution:
 
