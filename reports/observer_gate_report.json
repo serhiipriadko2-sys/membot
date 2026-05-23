@@ -1,0 +1,23 @@
+{
+  "verdict": "SMOKE_ONLY",
+  "status": "SMOKE_ONLY",
+  "run_mode": "smoke",
+  "row_count": 1,
+  "min_live_rows": 50,
+  "quote_success_count": 1,
+  "coverage_pct": 100.0,
+  "p50_total_latency_ms": 345.0,
+  "p90_total_latency_ms": 345.0,
+  "p50_quote_latency_ms": 250.0,
+  "p90_quote_latency_ms": 250.0,
+  "p50_detector_latency_ms": 95.0,
+  "p90_detector_latency_ms": 95.0,
+  "missing_fields": [],
+  "row_errors": [],
+  "reasons": [
+    "run mode is not live",
+    "row count 1 below live minimum 50"
+  ],
+  "live_network_confirmed": false,
+  "decision_boundary": "Paper mode remains blocked unless this verdict is PASS. Live execution remains forbidden."
+}

@@ -63,10 +63,14 @@ READY TO TRADE
 - `reports/PROJECT_CONTEXT_UPDATE_2026-05-23.md` — current source-of-truth update.
 - `reports/STAS_FINAL_REPORT_7BN.md` — handoff report for Stas.
 - `docs/FAST10_EXECUTION_LAB.md` — execution-lab protocol and gates.
-- `docs/FAST10_OBSERVER.md` — no-key observer workflow and input/output contract.
+- `docs/FAST10_OBSERVER.md` — no-key observer workflow and mandatory latency gate contract.
+- `README_RUNBOOK.md` — Observer smoke/live-run/package-audit runbook.
 - `docs/SUPABASE_SYNC_STATUS.md` — Supabase migration/sync status.
 - `supabase/migrations/20260523000000_execution_lab_research_registry.sql` — proposed metadata registry migration.
-- `scripts/fast10_observer.py` — observer harness for signal -> Jupiter quote latency.
+- `scripts/fast10_observer.py` — no-key observer harness for signal -> Jupiter quote latency.
+- `scripts/fast10_detector_emitter.py` — smoke-only latency CSV plumbing emitter.
+- `scripts/observer_gate_eval.py` — Observer live-run gate evaluator.
+- `scripts/observer_package_audit.py` — delivery ZIP manifest/hash/secret audit.
 - `reports/research_dossier_2026-05-22.md` — earlier audit dossier.
 
 ## Source of truth
@@ -87,18 +91,25 @@ Do not use dashboard screenshots or third-party summaries as final truth. Source
 Build **Fast10 Observer**:
 
 ```text
-live stream -> Fast10 detect -> quote -> latency log -> observer_latency_live.csv
+candidate feed -> Fast10 detect -> quote -> latency breakdown -> observer_latency_live.csv
 ```
 
 Current repo status:
 
 ```text
-observer harness: READY
-live detector-emitter: NEXT
+observer harness: READY_FOR_LIVE_RUN
+current observer gate: FAILED UNTIL LIVE CSV PASS
+smoke emitter: READY
 paper execution: BLOCKED UNTIL OBSERVER PASS
 ```
 
 No private key. No signing. No live trading.
+
+Canonical wording until a real network-enabled CSV passes the evaluator:
+
+```text
+Observer harness validated; live network run pending.
+```
 
 Current command:
 
@@ -111,8 +122,10 @@ python scripts/fast10_observer.py \
 PASS for moving to Paper Execution:
 
 ```text
-p50 signal_to_quote_ms < 500
-p90 signal_to_quote_ms < 1000
+p50 total_latency_ms < 500
+p90 total_latency_ms < 1000
+p50/p90 quote_latency_ms populated
+p50/p90 detector_latency_ms populated
 quote coverage >= 90%
 no private keys
 complete audit log

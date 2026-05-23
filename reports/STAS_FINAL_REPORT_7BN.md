@@ -66,18 +66,26 @@ Build `Fast10 Observer` first:
 - no private key;
 - no signing;
 - no live orders;
-- live stream input;
-- Fast10 detector;
+- network-enabled candidate feed;
+- Fast10 detector/emitter;
 - Jupiter quote request;
-- latency logger;
+- latency breakdown logger;
 - output file: `observer_latency_live.csv`.
+
+Correct current status wording:
+
+```text
+Observer harness validated; live network run pending.
+```
 
 ## Go / no-go gate
 
 Only move to Paper Execution if:
 
-- p50 signal-to-quote latency is under `500ms`;
-- p90 is under `1000ms`;
+- p50 `total_latency_ms` is under `500ms`;
+- p90 `total_latency_ms` is under `1000ms`;
+- p50/p90 `quote_latency_ms` are populated;
+- p50/p90 `detector_latency_ms` are populated;
 - quote coverage is over `90%`;
 - simulated paper PnL stays positive under realistic fees/slippage;
 - logs are complete enough to audit.

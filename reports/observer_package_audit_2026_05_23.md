@@ -1,0 +1,335 @@
+# Observer Package Audit
+
+- Package: `C:\Users\gabra\Downloads\workspace-019e5546-154a-7cf3-a256-76d9a0297dcc.zip`
+- Verdict: `FAIL`
+- Bytes: `138975355`
+- SHA256: `5b353e0aada010826380452ab3c3327df65c1c24ade709d838b40e38ea9ad48f`
+- Safety receipt: `NO_PRIVATE_KEYS` if and only if secret findings are empty.
+
+## Required Files
+
+- MISSING: `fast10_detector_emitter.py`
+- MISSING: `observer_gate_eval.py`
+- MISSING: `README_RUNBOOK.md`
+- MISSING: `observer_latency_live.csv`
+
+## Noise Entries
+
+- `.cache/pip/http-v2/0/0/5/2/9/005298b55218fcf8890ee28f2d436edb637e64ca3610c3698f55cc3c`
+- `.cache/pip/http-v2/0/0/5/2/9/005298b55218fcf8890ee28f2d436edb637e64ca3610c3698f55cc3c.body`
+- `.cache/pip/http-v2/0/1/a/b/3/01ab38ac63d82e82f212dd86d62de883eb0d7de6be8db88f70d14a62`
+- `.cache/pip/http-v2/0/1/a/b/3/01ab38ac63d82e82f212dd86d62de883eb0d7de6be8db88f70d14a62.body`
+- `.cache/pip/http-v2/0/2/3/4/5/0234543d07ad2244392fbc8aa586b7374b2e2e89ec039ea38ff11297`
+- `.cache/pip/http-v2/0/2/3/4/5/0234543d07ad2244392fbc8aa586b7374b2e2e89ec039ea38ff11297.body`
+- `.cache/pip/http-v2/0/2/6/2/4/02624ae1b94f0a11522508a17f4898ccaf1c3a7f1d42a653818f6ee8`
+- `.cache/pip/http-v2/0/2/6/2/4/02624ae1b94f0a11522508a17f4898ccaf1c3a7f1d42a653818f6ee8.body`
+- `.cache/pip/http-v2/0/2/c/a/3/02ca3243c3394b412283a10d4b193c5cfd7256e72fbccf921e36e4c2`
+- `.cache/pip/http-v2/0/2/c/a/3/02ca3243c3394b412283a10d4b193c5cfd7256e72fbccf921e36e4c2.body`
+- `.cache/pip/http-v2/0/8/c/5/2/08c529a50acabdc4a3b716cb96b3de911958f141b2e2e34df7f80889`
+- `.cache/pip/http-v2/0/8/c/5/2/08c529a50acabdc4a3b716cb96b3de911958f141b2e2e34df7f80889.body`
+- `.cache/pip/http-v2/0/9/3/1/8/093180ee01012c14970dbcab4cf226859daea24a739990c6c84ae512`
+- `.cache/pip/http-v2/0/9/3/1/8/093180ee01012c14970dbcab4cf226859daea24a739990c6c84ae512.body`
+- `.cache/pip/http-v2/0/a/e/8/4/0ae84cda1068eb8069d0d031ff1b592b6ce0646c279bf59396ff2d05`
+- `.cache/pip/http-v2/0/a/e/8/4/0ae84cda1068eb8069d0d031ff1b592b6ce0646c279bf59396ff2d05.body`
+- `.cache/pip/http-v2/1/0/2/f/6/102f6eb513cf2040a429f5bd18756c80cb658cb34cb70547e29f5ebd`
+- `.cache/pip/http-v2/1/0/2/f/6/102f6eb513cf2040a429f5bd18756c80cb658cb34cb70547e29f5ebd.body`
+- `.cache/pip/http-v2/1/3/c/a/e/13caef5517b905b585be436d270911cb10f6f09648dc4331468c2706`
+- `.cache/pip/http-v2/1/3/c/a/e/13caef5517b905b585be436d270911cb10f6f09648dc4331468c2706.body`
+- `.cache/pip/http-v2/1/4/a/a/f/14aaf7643dce3f389cfaa2f24beba9e2d02071e4624c02c288b2a440`
+- `.cache/pip/http-v2/1/4/a/a/f/14aaf7643dce3f389cfaa2f24beba9e2d02071e4624c02c288b2a440.body`
+- `.cache/pip/http-v2/1/6/0/d/3/160d3e8f69a7eca4743b16bea3eecb80155f94e8435ce6481997004c`
+- `.cache/pip/http-v2/1/6/0/d/3/160d3e8f69a7eca4743b16bea3eecb80155f94e8435ce6481997004c.body`
+- `.cache/pip/http-v2/1/6/9/3/2/1693297fb9daf7bfe370bf51d371acfeb8ff40759bf8650dfd404ba4`
+- `.cache/pip/http-v2/1/6/9/3/2/1693297fb9daf7bfe370bf51d371acfeb8ff40759bf8650dfd404ba4.body`
+- `.cache/pip/http-v2/1/7/1/3/b/1713b8459b143087c90e39d4d86f7b5813003512784b7f2f236d54ae`
+- `.cache/pip/http-v2/1/7/1/3/b/1713b8459b143087c90e39d4d86f7b5813003512784b7f2f236d54ae.body`
+- `.cache/pip/http-v2/1/7/5/7/1/1757187d6a11181d6aa9886293164107ee5bb5973c5c0f6e9ee70d52`
+- `.cache/pip/http-v2/1/7/5/7/1/1757187d6a11181d6aa9886293164107ee5bb5973c5c0f6e9ee70d52.body`
+- `.cache/pip/http-v2/1/9/8/0/9/19809135c6d59497e59e2821c8925060a325c64457dd6fb00e0b5c82`
+- `.cache/pip/http-v2/1/9/8/0/9/19809135c6d59497e59e2821c8925060a325c64457dd6fb00e0b5c82.body`
+- `.cache/pip/http-v2/1/d/4/6/8/1d46884217ce0a3877aae5a70d973284295a14851929d3ed86a90b63`
+- `.cache/pip/http-v2/1/d/4/6/8/1d46884217ce0a3877aae5a70d973284295a14851929d3ed86a90b63.body`
+- `.cache/pip/http-v2/2/2/6/e/2/226e20ef37baae18486c4b142f19362b0176ef112b8135637169c623`
+- `.cache/pip/http-v2/2/2/6/e/2/226e20ef37baae18486c4b142f19362b0176ef112b8135637169c623.body`
+- `.cache/pip/http-v2/2/2/9/5/a/2295a2c74cad373566f8358dd1d65ea4e71b579f92820573b51e9ee1`
+- `.cache/pip/http-v2/2/2/9/5/a/2295a2c74cad373566f8358dd1d65ea4e71b579f92820573b51e9ee1.body`
+- `.cache/pip/http-v2/2/3/4/4/6/23446cc6157b1ce7d0c47be470d3e3e086ba28baabb823def5b31de1`
+- `.cache/pip/http-v2/2/3/4/4/6/23446cc6157b1ce7d0c47be470d3e3e086ba28baabb823def5b31de1.body`
+- `.cache/pip/http-v2/2/4/3/b/c/243bcd5f67aa8ae85f44b5eafd99c9a10de2056af548957a3ce88716`
+- `.cache/pip/http-v2/2/4/3/b/c/243bcd5f67aa8ae85f44b5eafd99c9a10de2056af548957a3ce88716.body`
+- `.cache/pip/http-v2/2/a/4/1/c/2a41cb8e405637e51ada370419ba2d90cff5ec7779741a4b3b53a257`
+- `.cache/pip/http-v2/2/a/4/1/c/2a41cb8e405637e51ada370419ba2d90cff5ec7779741a4b3b53a257.body`
+- `.cache/pip/http-v2/2/b/3/4/2/2b342842e43d21ec42ace6a7a54fda4b223389caf878765417d5d811`
+- `.cache/pip/http-v2/2/b/3/4/2/2b342842e43d21ec42ace6a7a54fda4b223389caf878765417d5d811.body`
+- `.cache/pip/http-v2/3/0/e/f/1/30ef132248ab98ab0a92d2d15ee6957bdad5542ffbb630d3a32f7721`
+- `.cache/pip/http-v2/3/0/e/f/1/30ef132248ab98ab0a92d2d15ee6957bdad5542ffbb630d3a32f7721.body`
+- `.cache/pip/http-v2/3/3/4/3/3/33433699cc590d7bf72f5c7ef41e9bad5566ff4942046793be16073a`
+- `.cache/pip/http-v2/3/3/4/3/3/33433699cc590d7bf72f5c7ef41e9bad5566ff4942046793be16073a.body`
+- `.cache/pip/http-v2/3/3/a/d/7/33ad7fe31489f80e15fea42300adbfc4d75c0efc76d75cfab7d2e5b0`
+- `.cache/pip/http-v2/3/3/a/d/7/33ad7fe31489f80e15fea42300adbfc4d75c0efc76d75cfab7d2e5b0.body`
+- `.cache/pip/http-v2/3/8/8/b/9/388b9b3716d274ff2a4943a4dd9ca96030e9b3fa7d0648c5214de616`
+- `.cache/pip/http-v2/3/8/8/b/9/388b9b3716d274ff2a4943a4dd9ca96030e9b3fa7d0648c5214de616.body`
+- `.cache/pip/http-v2/3/9/8/1/3/398134aaeacada9feb8b12654a25e878c4f41490786622fc606a7a1c`
+- `.cache/pip/http-v2/3/9/8/1/3/398134aaeacada9feb8b12654a25e878c4f41490786622fc606a7a1c.body`
+- `.cache/pip/http-v2/3/d/5/e/5/3d5e592695d099cf424cb7da4c3977c035677b66773a139108f8d0fc`
+- `.cache/pip/http-v2/3/d/5/e/5/3d5e592695d099cf424cb7da4c3977c035677b66773a139108f8d0fc.body`
+- `.cache/pip/http-v2/3/d/b/a/4/3dba48e33e4deae5b8e0b5d8173f7d8b9ede86f6e2f3b423cb213061`
+- `.cache/pip/http-v2/3/d/b/a/4/3dba48e33e4deae5b8e0b5d8173f7d8b9ede86f6e2f3b423cb213061.body`
+- `.cache/pip/http-v2/4/3/3/6/6/43366b9cfd7cda6f92bf06f4d534823ba23f561940b1afb0c7e42dd9`
+- `.cache/pip/http-v2/4/3/3/6/6/43366b9cfd7cda6f92bf06f4d534823ba23f561940b1afb0c7e42dd9.body`
+- `.cache/pip/http-v2/4/3/c/4/b/43c4b5b6d2a76df6cf04e648f27fefecd36ebda5d5badc8cef4c9734`
+- `.cache/pip/http-v2/4/3/c/4/b/43c4b5b6d2a76df6cf04e648f27fefecd36ebda5d5badc8cef4c9734.body`
+- `.cache/pip/http-v2/4/4/6/8/e/4468e40774681793518536d8759dc05bbcc31d40bbb21a97463f314d`
+- `.cache/pip/http-v2/4/4/6/8/e/4468e40774681793518536d8759dc05bbcc31d40bbb21a97463f314d.body`
+- `.cache/pip/http-v2/4/7/0/e/6/470e6e6a315630452ab5eff32bf42bbb896b22515a48c375493956f7`
+- `.cache/pip/http-v2/4/7/0/e/6/470e6e6a315630452ab5eff32bf42bbb896b22515a48c375493956f7.body`
+- `.cache/pip/http-v2/4/9/0/f/6/490f6d7cd33219a4671ccf426e5cf1fb77b4a08820a91961cb0ae903`
+- `.cache/pip/http-v2/4/9/0/f/6/490f6d7cd33219a4671ccf426e5cf1fb77b4a08820a91961cb0ae903.body`
+- `.cache/pip/http-v2/4/a/9/a/0/4a9a03a15758072c8c68aebb46c0b3209bcedc14f54394144919eda2`
+- `.cache/pip/http-v2/4/a/9/a/0/4a9a03a15758072c8c68aebb46c0b3209bcedc14f54394144919eda2.body`
+- `.cache/pip/http-v2/4/a/f/5/a/4af5aef7181a3a10a492f821f75ad6ad194c2b8f4825164bdd0b3b6f`
+- `.cache/pip/http-v2/4/a/f/5/a/4af5aef7181a3a10a492f821f75ad6ad194c2b8f4825164bdd0b3b6f.body`
+- `.cache/pip/http-v2/4/a/f/9/9/4af9900b488a77781812d4d4922bb166f99c08b4c769978e721bd8c8`
+- `.cache/pip/http-v2/4/a/f/9/9/4af9900b488a77781812d4d4922bb166f99c08b4c769978e721bd8c8.body`
+- `.cache/pip/http-v2/4/d/3/4/f/4d34fb50a0dc20a2d1f387feb9119da62fd697ccd2959207fda16ddb`
+- `.cache/pip/http-v2/4/d/3/4/f/4d34fb50a0dc20a2d1f387feb9119da62fd697ccd2959207fda16ddb.body`
+- `.cache/pip/http-v2/4/f/5/7/a/4f57a2f3aeb6233c243ed1a99c446bbb9fe6994e1757ad3b67f0afcb`
+- `.cache/pip/http-v2/4/f/5/7/a/4f57a2f3aeb6233c243ed1a99c446bbb9fe6994e1757ad3b67f0afcb.body`
+- `.cache/pip/http-v2/4/f/f/8/6/4ff8606ef3565dd3d8cb49160a12b00a0874f4891b47bf2460855867`
+- `.cache/pip/http-v2/4/f/f/8/6/4ff8606ef3565dd3d8cb49160a12b00a0874f4891b47bf2460855867.body`
+- `.cache/pip/http-v2/5/3/3/2/5/53325ceb1ca49d1f81a023fb16d32677afdd7a2060d12a87cb3a0c75`
+- `.cache/pip/http-v2/5/3/3/2/5/53325ceb1ca49d1f81a023fb16d32677afdd7a2060d12a87cb3a0c75.body`
+- `.cache/pip/http-v2/5/5/8/d/0/558d0aba3c20da4a3e4870d94b61e0844b67b16d912645465bb93430`
+- `.cache/pip/http-v2/5/5/8/d/0/558d0aba3c20da4a3e4870d94b61e0844b67b16d912645465bb93430.body`
+- `.cache/pip/http-v2/5/5/e/8/9/55e89b09594758366a997abbae14a69af04566121efa35f87cbadc71`
+- `.cache/pip/http-v2/5/5/e/8/9/55e89b09594758366a997abbae14a69af04566121efa35f87cbadc71.body`
+- `.cache/pip/http-v2/5/6/b/e/9/56be90c6a0b4e61b8144a3ec487a3e4a2e3fcc2196629e9a5bb57628`
+- `.cache/pip/http-v2/5/6/b/e/9/56be90c6a0b4e61b8144a3ec487a3e4a2e3fcc2196629e9a5bb57628.body`
+- `.cache/pip/http-v2/5/9/c/5/0/59c5017976d4b09ccdcc322ecef2f9f3ffce3ba2c7411f80b22bdf62`
+- `.cache/pip/http-v2/5/9/c/5/0/59c5017976d4b09ccdcc322ecef2f9f3ffce3ba2c7411f80b22bdf62.body`
+- `.cache/pip/http-v2/5/c/4/0/e/5c40ede8c65c065aa7288fd395d82bbb5605591a31de8edb02652488`
+- `.cache/pip/http-v2/5/c/4/0/e/5c40ede8c65c065aa7288fd395d82bbb5605591a31de8edb02652488.body`
+- `.cache/pip/http-v2/6/0/d/7/6/60d76000e692d001575cc8b3c5636dbc7c1427cc1b31cd5b6a7ddf58`
+- `.cache/pip/http-v2/6/0/d/7/6/60d76000e692d001575cc8b3c5636dbc7c1427cc1b31cd5b6a7ddf58.body`
+- `.cache/pip/http-v2/6/2/a/9/1/62a91bf3a58334f86244ef50cf8cefa53d76bc366b2fde5353144958`
+- `.cache/pip/http-v2/6/2/a/9/1/62a91bf3a58334f86244ef50cf8cefa53d76bc366b2fde5353144958.body`
+- `.cache/pip/http-v2/6/5/5/8/3/655831cd15b69b6295517747fc568e968efffafe8490bbb9d7ea7611`
+- `.cache/pip/http-v2/6/5/5/8/3/655831cd15b69b6295517747fc568e968efffafe8490bbb9d7ea7611.body`
+
+## Secret Findings
+
+- `.cache/pip/http-v2/8/0/6/3/6/806366e41f528c7b7fbd8d56ea0250ba9ebcf4270a1af519a9bb79da.body:76` pattern=`legacy_jwt_like_key` sample=`[REDACTED]`
+- `.env:3` pattern=`dune_assignment` sample=`[REDACTED]`
+- `scripts_old/forensic_deep_analysis.py:21` pattern=`helius_assignment` sample=`[REDACTED]`
+
+## Accepted Artifact Hashes
+
+- `.devcontainer/devcontainer.json` bytes=`1042` sha256=`519ea290ccc850e1da768631b1cce4fc10899bbef162cadaf447b89e15675135`
+- `.env` bytes=`156` sha256=`99782df360b7f51ef0130fdb0bdde20091c559af7d11bd9450d1feab54c76e8b`
+- `.env.example` bytes=`1364` sha256=`7e0ec1ec915150f8d4a1656c54cb064067affc24139b2642e521eeab2bc9bb87`
+- `.github/workflows/agent-ci-smoke.yml` bytes=`549` sha256=`9b1d0e4c09627b05e1ea577022df20a4de27b1febc265df319f021a68acadcff`
+- `.github/workflows/run_forensic_verification.yml` bytes=`3122` sha256=`664c3d1f5fcc0cbae55cddf8558b7d7d789db607b8c5048bd803595aa9bc3a4e`
+- `.github/workflows/security-history-scan.yml` bytes=`893` sha256=`faa0e10287c7bcb449a5d2e47b2066b69b2800f2245b8fb6bd6087e5f3bd6ca7`
+- `.github/workflows/security-scan.yml` bytes=`485` sha256=`4008387f7d50e49f0ecedaec56f33c4a07322c5b37c8dd0f4c4e1de47d016a53`
+- `.gitignore` bytes=`131` sha256=`cb982f428081685e6a22094b45a5dd40e19caf88702ce0c8c6b255d0e4db0486`
+- `.streamlit/config.toml` bytes=`216` sha256=`3a66fe4009b6e4d1417e02ff79bfe027f4e35e1af00efaaa8ff7ece4737b34f2`
+- `.vscode/mcp.json` bytes=`1201` sha256=`c319b03a49a4a227cba03312b0c04cf276a74f77b11387070841b3ecd7c5c232`
+- `README.md` bytes=`3398` sha256=`bb8649d2de78f1eb4da81cb0384fc47c48c7d80ebf044cbadc886a2941be8ea6`
+- `STAS_BOT_TECH_SPEC.md` bytes=`1296` sha256=`a0ff8175875d38aeba4dcac79b7a12532aee2ddb18360ff309b9ca3f566c7c0e`
+- `alpha_verdict_7BN_validated.md` bytes=`1987` sha256=`3ad9692406f76f373a8ea7479460263435c3710132a70d957ccafcde776d9a7d`
+- `app/_agentic_layer.py` bytes=`109` sha256=`ecc75c244a5e5b6da0937a12cadf0a61cc7143edb0aceb80401bda55ee960276`
+- `app/agent_mode_ui.py` bytes=`7287` sha256=`7958188fdae7d3d3000036273d19f3844fc737bbb68954c53805b58be890059e`
+- `app/agent_modes.py` bytes=`12362` sha256=`b6ebb62188f22ba5908b247145c6514b78c7a5427fd2019eef0692426d8a011c`
+- `app/agent_runtime_qa.py` bytes=`6623` sha256=`c3531a04418b4175cf1262c8673dafa8ded7f07afead44aed2547aa012933864`
+- `app/agentic_layer.py` bytes=`28939` sha256=`0337a1a62310bdc58a8d5d5c9551a5dc631e6085c1d57dbad42fe1d5d7d95352`
+- `app/pages/00_Iskra_Forge.py` bytes=`26944` sha256=`abcf68657cd2995d29edd25b490d3ac9dc5a2c8ced2905802c89ea2c5672a6a4`
+- `app/pages/01_Supabase_Bridge.py` bytes=`11747` sha256=`f403c47eb93bbc62a16770f09512a261c6fbb1188416ee90fadd63abe44d5268`
+- `app/pages/_agentic_layer.py` bytes=`558` sha256=`4a5a6cc66920c379056af691a99b29cda665969c88a5fb703997b0010119b5ee`
+- `app/streamlit_app.py` bytes=`584` sha256=`7ab69a41c7a945a5bb7aede71bff5afc461133473e5f9ee9c2f3a41bf8a7a275`
+- `configs/entry_exit_hypotheses.v0.yaml` bytes=`4416` sha256=`fc1586fe5a08d340e46bd8370807b4e8cf6d9306f8f6c3d4f73a0a7ea8b978e8`
+- `configs/prebuy_feature_manifest.yaml` bytes=`9011` sha256=`eb5f5db2dbab823ac48a230f601ca2f3de04297c83cc81d666ddb1cdb2193d63`
+- `configs/prebuy_feature_manifest_market.yaml` bytes=`2931` sha256=`ea87fe96bb66e4205d48686d244135a425996f38642adbcad7e97cab405d1173`
+- `data/external/dune_market_results.csv` bytes=`324486` sha256=`ba9c11c47791eff6e4d61f59df051f2bf5176a74fad2fd97394155502c18450f`
+- `data/external/dune_market_results_full.csv` bytes=`1299494` sha256=`77cf39bb66004df52c5158ece80942359c666f6f27762a8250437a6546153c8e`
+- `data/external/fast10_post_signal_market_tape.csv` bytes=`1209495` sha256=`0d5ee4a2591c1434653ccc857e23ee7c987018e59719aa090103169256776bd8`
+- `data/external/tape_full.csv` bytes=`12934835` sha256=`c730ca0c0392c26062175a48782e663153c63eed47e2a51a40c61708d56376fb`
+- `data/processed/daily_pnl_calendar.csv` bytes=`417` sha256=`4f19f0c5501847f1c98a29e9288a376b16f205889b0207c78eb1d1b3feace99b`
+- `data/processed/entry_context.csv` bytes=`3337` sha256=`340532d6eb9af8a6cbc92db27f690f961200cf4e43c54530755bfb5d94631f6b`
+- `data/processed/price_series.csv` bytes=`0` sha256=`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+- `data/processed/trades_paired.csv` bytes=`1143` sha256=`cf9e0d62f329db3f2d4c8700bb5717d8cf92a95d26a4fd9783b7715b268d7491`
+- `data/processed/wallet_swaps.csv` bytes=`11757` sha256=`503bc73a9dcd6486aebbc3a418f711dc4f67ed23749abbb7d99f54308acfa2d6`
+- `data/processed/wallet_swaps_fixtures.csv` bytes=`687` sha256=`29719613f5c4d0e5e47ecaea89e00c367a24ad9848306739408bb851ba143e5f`
+- `data/raw/signatures_raw.json` bytes=`26706` sha256=`66b7ce965a0d14860a1729fc370186c127f8b102c9cba14656c6314cc0619a79`
+- `data/raw/transactions_raw.json` bytes=`619304` sha256=`c96047261fe0825d57575a8bf60cc79e41d881a273e434d04a0d39c4c64deeff`
+- `docs/APP_BLUEPRINT.md` bytes=`2254` sha256=`0ea80ab430b67e5fecb32eac677239de14d48f994b60f438a66e88674eb56a2e`
+- `docs/BACKTEST_PROTOCOL.md` bytes=`1799` sha256=`55ed34e2eec750270cce7827e269e6be3e82126baeb13818751363fb1cb8d83a`
+- `docs/DEPLOY_MOBILE.md` bytes=`4473` sha256=`d3d94d6ea83305e581b2edc31ceff80fbee607021dab4bce1edd5c8a76d77b24`
+- `docs/ENTRY_CONTEXT_PROTOCOL.md` bytes=`4251` sha256=`2cb12bff1cfbb2a263e990c29d3c7e336b98a5644b35807022d6fc3213def282`
+- `docs/FIFO_COST_BASIS_PROTOCOL.md` bytes=`2435` sha256=`3458c8c35d880fa22be3a3e29ebb29eba26713281c2b0b4276568145aff60b2f`
+- `docs/M3_2_MARKET_CONTEXT.md` bytes=`2416` sha256=`9cb8577efabd7abca0f2b84f7e4934e8436a2e9bdb66e4d708968957d9763b90`
+- `docs/MARKET_WIDE_ENRICHMENT_PROTOCOL.md` bytes=`2976` sha256=`57f6f4c84ce744a0b0d46c73b4aabe2c1a6da3d940f5a3508a234ecf666f4bd9`
+- `docs/PROTOCOL.md` bytes=`3654` sha256=`7864d82aab8ee4e7412514a48e8cc6c9fbd421af4c560797a6a216f18a80537b`
+- `docs/QC_FINDINGS.md` bytes=`1634` sha256=`e6cd12d71bb35ee91f4f27ec3a38c2172aa4e8c059d38925aa5a5ad3ceb5f936`
+- `docs/RESEARCH_2026_NOTES.md` bytes=`2864` sha256=`ea5705bda53e08acdb5d99a98496501bda6992c8fe74d4dd07b8b565aa37834f`
+- `docs/ROADMAP.md` bytes=`425` sha256=`483cec7cd5c902896bafb612ea56424658484e43e481afefbd4e7f8ac1da5138`
+- `docs/RPC_BACKOFF_AND_SUPABASE_BRIDGE.md` bytes=`2355` sha256=`c062986fc6669abdfe92a8846191c13531d34c4060e6edb1226e675299130a41`
+- `docs/RPC_PROVIDER_STRATEGY.md` bytes=`5868` sha256=`b985dfc5392163c6098d61f5b610fa9b085f6cd1d61b7fa1fd186489b2a0a978`
+- `docs/RUN_AUDIT_2026_05_17.md` bytes=`5953` sha256=`fb4ca25c395c48501e2cffee40cd3700696bfd46e44e702376543cc7ec7f8587`
+- `docs/SECURITY.md` bytes=`2828` sha256=`27dc2e22face3cdeef815c35f4e435e680d098abc0ac5b098ff626272209189c`
+- `docs/SOURCE_AUDIT_2026.md` bytes=`4079` sha256=`d49fc041ed5817acf4d06aa0aeeb50bec8a947af5883fd015ea4b7b5f40fedb1`
+- `docs/agent/AGENT_SCOPE_SUCCESS_RISK.md` bytes=`4507` sha256=`85bfeccf468d187342b069d83df19baef35ff5a63f558461d743bab1c44d8507`
+- `docs/dev/AGENTMEMORY_SETUP.md` bytes=`6886` sha256=`0f8631ee790a8199d2d1c9dd65e7f7b12da3bce16263fc9efb51fe0b1149a22d`
+- `docs/ui/DATA_DRIVEN_FORGE_WIDGETS.md` bytes=`1962` sha256=`a3e54b24ff7bb8b1fee98146ba4d6b63a4b162cc573068886635dfd2e9a48506`
+- `docs/ui/FORGE_WIDGET_ARTIFACT_QA.md` bytes=`1509` sha256=`76ea498f55698f1ef3eff45de52073f0ed72c3d6e3552c735b1bdcf79b90007f`
+- `docs/ui/ISKRA_SIGNAL_FORGE_STYLE.md` bytes=`1272` sha256=`1fc7d9f7f85b7a77f019c1dad9a7b366fe01cbc0aac6b6dcc65acdf32784e42e`
+- `docs/ui/ONBOARDING_AND_AGENT_LAYER.md` bytes=`11116` sha256=`1ec3de8d5208f5cf6143ee6793527880a4e47660b30380f763e3b07ba2924f9a`
+- `docs/ui/SINGLE_FORGE_NAVIGATION.md` bytes=`1097` sha256=`d28d1e00fc1fa043b23d8c3bc7116d074dc11ebbe0ce905ed50d3b788db6cf26`
+- `docs/ui/STREAMLIT_HOTFIX_DUPLICATE_ELEMENTS.md` bytes=`1381` sha256=`339348c91709f218bdb3abba8fc05c65340d219d1801a9fcbc618942c4899a78`
+- `exit_rule_sweep.py` bytes=`1787` sha256=`d364192b69e82fd593d8f9dd3962f709fc1a0e2b215bb3089d883093910ab4f8`
+- `exit_rule_sweep_fast10.csv` bytes=`4822` sha256=`9aee7aec96adfdf854900945da1dc4fff55ed71111dbd6c4e3c90326f93f10bf`
+- `final_verification_suite.py` bytes=`2796` sha256=`2b07e98b50dbdd0d467fe76b2cc237d32807b943c7f9698200531ff0b9ea4ca6`
+- `final_walk_forward_audit_full.md` bytes=`2058` sha256=`653edae7462494ddce66f8d851ce935e5e46c536accf1e27febe34b19523762a`
+- `home/user/DEEP_MICRO_STRUCTURE.md` bytes=`1156` sha256=`e712cda00ef5576def8d49dd97132f60594c0cb6990fc814e13031da8e551338`
+- `home/user/MASTER_ENGINEERING_GUIDE.md` bytes=`1441` sha256=`130f87fcc6e897e13c4e40f6d75aa95d6f6bb809d396fa17f524723a2febdac6`
+- `home/user/STAS_BOT_TECH_SPEC.md` bytes=`813` sha256=`6af5331b891bd4adb750523c835baa3e6a434dcc06158f5e7e332ca87dd4b071`
+- `latency_decay_fast10.csv` bytes=`497` sha256=`769f7957b1c47a5b27aa6efde91c5c649b114eca828924367d9d8a7eb9d77a95`
+- `micro_regime_deepening.py` bytes=`2199` sha256=`9b904d91925e854e41caf8be7d2c16f8d4fb8949ee7629352c3d15df9ea4677d`
+- `project_fast10_final.zip` bytes=`5024858` sha256=`e3041b0ac51a2bed71fd4ff5dc62685f82e34762c9b7cf9e3229d34502c5eca3`
+- `queries/dune_m3_solana_trades.sql` bytes=`2040` sha256=`2f2cdb8f42c448ada8469d62eb045096d982623ceb1e4c5959810a77f687d618`
+- `reports/Final_Forensic_Brief_7BN.md` bytes=`1627` sha256=`0c584377238cd2210b297795fd1579e6c602f635cb467ed4b47b89c2ecf26d8c`
+- `reports/alpha_verdict_7BN.md` bytes=`1944` sha256=`511eed7694e6d6ccac0b48197ecee30b655ab618aaf124a9066395e0a0036674`
+- `reports/alpha_verdict_7BN_validated.md` bytes=`1987` sha256=`3ad9692406f76f373a8ea7479460263435c3710132a70d957ccafcde776d9a7d`
+- `reports/complex_triggers_audit.md` bytes=`2469` sha256=`13d020c6ab483ba3fef06a786057ed10b22345472c3a51a5d83499f122d6d056`
+- `reports/daily_pnl_calendar_report.md` bytes=`662` sha256=`59caeefa7821dbaf418dd7ebf28c0538e32013d6fb488c7283427c56d1afb207`
+- `reports/exit_rule_sweep_fast10.csv` bytes=`4822` sha256=`9aee7aec96adfdf854900945da1dc4fff55ed71111dbd6c4e3c90326f93f10bf`
+- `reports/final_walk_forward_audit_full.md` bytes=`2058` sha256=`653edae7462494ddce66f8d851ce935e5e46c536accf1e27febe34b19523762a`
+- `reports/forensic_wallet_analysis_7BNaxx.md` bytes=`2874` sha256=`657c05768bd4bdce0f0314f82f16d0202345ba42b287a34194980ca4f05ab1ce`
+- `reports/latency_decay_fast10.csv` bytes=`497` sha256=`769f7957b1c47a5b27aa6efde91c5c649b114eca828924367d9d8a7eb9d77a95`
+- `reports/metrics_report.md` bytes=`926` sha256=`aacfc7bdd1139a2ea7d009155f9752feb9582be2580a0e1b72399f6f6abe2597`
+- `reports/observer_status_2026_05_23.md` bytes=`1275` sha256=`fbe40f6a0cd395b118e3ec972b86c63979dd30d9e571628b946cf725bb5f3f76`
+- `reports/prebuy_trigger_report.md` bytes=`618` sha256=`644b50075bb819a4e955d8f8f689c0b5cd0627d0ae3113ed6d7a3bff979f8836`
+- `reports/walk_forward_destruction_7BN.md` bytes=`1752` sha256=`62a27b011ca4efaac2c36d4fa05442285af5b7d605df27df4a764a6c095ccd42`
+- `requirements.txt` bytes=`116` sha256=`298ae520d28f3918acc3350d2201c9fb388f3a8d47cd884a208ed24ad8755ed2`
+- `rust_predator/Cargo.toml` bytes=`366` sha256=`31fafa0fd4ef266c49ce9a599103103a40b18b673ea08e8785bcdb0409f81a1e`
+- `rust_predator/src/detector.rs` bytes=`1283` sha256=`8035f19caca239e7562792714abce1dc71f0976786505b033780003da6eab329`
+- `rust_predator/src/geyser.rs` bytes=`408` sha256=`4d53dab1f2c2afd6f4944a65b027935bfd593f7da077a19d57d233aec26c8e3f`
+- `rust_predator/src/main.rs` bytes=`595` sha256=`8116f06db32aa33c3fa798bfe000d275528fa3fcbb0483416f658c595314b8c3`
+- `rust_predator/src/paper_engine.rs` bytes=`2534` sha256=`e8b657f54f0f8d3b9fe07936c1bb7189d237b99570a2a2b4f739efa0732c21ff`
+- `rust_predator/src/parser.rs` bytes=`1605` sha256=`a7115c40d48aa015747c9ed0005f3ad7e899046f408d194e49025dc3d02ddd70`
+- `rust_predator/src/quote.rs` bytes=`941` sha256=`cde706d9f6b5685575f51fb5b4e2d31588e0f0e3c00bc13ac8f2c80e06c5d2ad`
+- `schemas/README.md` bytes=`253` sha256=`fa38e5cfda169c35ace67f9a77d1cf817d8508d70496786d93a8481b23a29f9a`
+- `schemas/cluster_context.schema.json` bytes=`1186` sha256=`44e39a5494a348297baffceb2f699a3ad79d9f6dd2dfa974954e872f4248a931`
+- `schemas/cross_chain_context.schema.json` bytes=`704` sha256=`38485b21d3177b6b70a08401181bd455c0d8589ccaee5a277ed50f4148c94066`
+- `schemas/entry_context.schema.json` bytes=`1725` sha256=`b620041c7e8d6589facf2d3cf835fc80de6f1e6a354fafe07b366eb4bdb9c1f1`
+- `schemas/gmgn_trend_snapshots.schema.md` bytes=`3429` sha256=`4fe90f9ceb68a261dfa74d43aa0ad58d34e0fb35af7cb19c093c630cc8c9be75`
+- `schemas/reject_reason.schema.json` bytes=`551` sha256=`a207d31b53a2424dbcf589f95bcb64e9d484913d3c5dd8ed450e3b9651a94744`
+- `schemas/trigger_signal.schema.json` bytes=`719` sha256=`826e97d03685a3d04dc41a940ee9b0ae67e8d3aca4dc4fbfd3aecf3219a33443`
+- `scripts_old/00_check_rpc_health.py` bytes=`9299` sha256=`b2d4f615b055a651394fa7fed1533bc89cf42f9489b9fa7285a770e20dbae620`
+- `scripts_old/01_fetch_signatures.py` bytes=`2023` sha256=`e6781f1bdf7e442b723e5683625abc53a43847b3f267f1f580c7786264fdc6f0`
+- `scripts_old/02_fetch_transactions.py` bytes=`3542` sha256=`7f966bcd615a4909b7323501b29af2ffcf912414b1efc2238ac1c0cd125f68bf`
+- `scripts_old/03_normalize_swaps.py` bytes=`6065` sha256=`fa2ec70da7edcc78ee495fbaf8f55da26bb6772b37374771d0e40f003ba52580`
+- `scripts_old/04_pair_trades.py` bytes=`3803` sha256=`67c81ff51de252eadfdb7bbb7f12bce0ab4b71a73efb5443373f6276837760e3`
+- `scripts_old/06_build_price_series.py` bytes=`1910` sha256=`e0fead557191cd17ed1b1daa596351405287f9505d6667193d62f21c9453b397`
+- `scripts_old/07_latency_sim.py` bytes=`5862` sha256=`30eda8e61529ec28f0db65b680902838fe4d7e98570509535a982e26641df91a`
+- `scripts_old/09_metrics_report.py` bytes=`4780` sha256=`b4f3fc8c5f64f2119f547b4fcacc4f95c5134234c6da216076574a4945675174`
+- `scripts_old/10_parse_gmgn_trend_snapshot.py` bytes=`11207` sha256=`5a54210ff3d05e7d3a96c3bba5fb51b1ef0f0d9dbba4ec448fc4543527a9f355`
+- `scripts_old/11_import_trade_export.py` bytes=`2656` sha256=`5f24d490a5421de18bb77754992676299dff10c18f133af30a9b795febee611a`
+- `scripts_old/12_fee_adjusted_pnl.py` bytes=`2746` sha256=`ca8d064a906dd8415ec3502ccd26f339d89eb4c21b2573e9d52633cb9170c02f`
+- `scripts_old/13_copy_stress_model.py` bytes=`3363` sha256=`2c2af2a559181a862831d55204a5bf7da282f5f87ee5ba791e0ad785ab8496a0`
+- `scripts_old/14_backtest_report.py` bytes=`4193` sha256=`cc46a0d20fc2d60b69647ed61b996ac25a422620032f9e614cfcadee40aaa098`
+- `scripts_old/15_build_open_positions.py` bytes=`2797` sha256=`4d142c6fc06e82057d152443f6bdb10999b3f92cbd21f42052901dc6fbe08dc4`
+- `scripts_old/16_reconcile_open_positions_fifo.py` bytes=`6855` sha256=`7c85f6a1193e5ca865ee577c11ebe6545c4a2f0fabf5a0564ea014f49b7f8286`
+- `scripts_old/18_build_entry_context.py` bytes=`18282` sha256=`f9154682e0e84aa91f73ef39b298f49a1c28dfe271123069f9c6bbdb6f125083`
+- `scripts_old/19_build_control_points.py` bytes=`5691` sha256=`3bec1eb05b85f926e39e0201b6791e068a0405050bed88e94c526fbc8c45d988`
+- `scripts_old/20_test_entry_triggers.py` bytes=`16956` sha256=`3c77f6e6a33733156b7ec360316a6bf6f68c2e6d7f400e535898181c525f373d`
+- `scripts_old/21_build_cluster_context.py` bytes=`8246` sha256=`89c2e42356b20ee7c2c4b8eaeeb1a0f26551b6eced2baefd72c935831bdefc81`
+- `scripts_old/21_build_market_same_token_swaps.py` bytes=`6822` sha256=`b820be9227ab7bb73f998a7887fbcac3f3e4301bbedb8ade62dfd6353c3e97dd`
+- `scripts_old/22_build_cross_chain_context.py` bytes=`5927` sha256=`bff1023ee37664bd3e1aa6207ce4a45db671231187c28a4cf439fbf2cd652837`
+- `scripts_old/22_enrich_entry_context_market.py` bytes=`9991` sha256=`19b6bf27f7ac7c9ec21e669d1dc7832375cb2a6fffd5d7b9c3a4900d1c2e361a`
+- `scripts_old/23_fetch_dune_market_csv.py` bytes=`3766` sha256=`365af6307679429ff748c53bdc4389625d493cdc88e55d25c90d7114208270bc`
+- `scripts_old/23_test_cluster_triggers.py` bytes=`5022` sha256=`7f6f5bd94f7d87bf5741af87f1bff138ea8472d301f725bcf6685184eb5f73aa`
+- `scripts_old/24_render_dune_market_query.py` bytes=`3732` sha256=`9fbeb48ecd0f380a864c62f1c9e4c1f1a70667b152b232988529807c108ea10e`
+- `scripts_old/24_test_cross_chain_triggers.py` bytes=`4081` sha256=`054ad9bd2f5b911a2f704863c11a737da91edbf3623ee8a11419828d9698a3c0`
+- `scripts_old/25_build_market_context.py` bytes=`11077` sha256=`6ce3f98bbae33c821a0cc11467b62670688ddc046604d6feba14e69ddf7b409d`
+- `scripts_old/26_build_market_controls.py` bytes=`4487` sha256=`b49724db8b5a1ea6be198d6991f36e6f3e34f5717482a5739747c6b9d94924ef`
+- `scripts_old/27_enrich_entry_context_market.py` bytes=`2733` sha256=`1b222a37d424b690668457a0b8968b815ee796a3494f8b8dae823219605ed0c8`
+- `scripts_old/28_build_helius_enrichment.py` bytes=`3544` sha256=`bb380e832d505addfc1ad3ba6ecb097936aa7eba9622d8aa2afc7ffb65014788`
+- `scripts_old/29_test_market_triggers.py` bytes=`4581` sha256=`ce3a3629eda2f86b62113c599c31721e12a59edff041750a03392e78ac59fac1`
+- `scripts_old/30_test_entry_exit_hypotheses.py` bytes=`19062` sha256=`71a6e04f395e3d419bcfe9c08331a61847580257c680689bbb125a518dc0a718`
+- `scripts_old/31_build_daily_pnl_calendar.py` bytes=`6724` sha256=`b4fa2f1f7844d981c26259435344865c93f330f0bd9d3844501590d5de05f54b`
+- `scripts_old/32_audit_priority_fees_and_jito.py` bytes=`10621` sha256=`0e84e9191518f36c87ce693ae26b1c2019dacdec67f47fbef5e98d013bcd6f30`
+- `scripts_old/README.md` bytes=`4023` sha256=`727bbeb8ff73d0daa1195d9f0c2ca50134426e6e62f6a2172d0fca9a0ef203ae`
+- `scripts_old/_verify_supabase.py` bytes=`1560` sha256=`1a4e52b10558da151659b8858e94298e019eb9ec28c683a17462cfc2a83274fe`
+- `scripts_old/advanced_coordinated_wallet_detector.py` bytes=`12227` sha256=`99e9e704c5ddf45e7f2c224b22e391afd02413b1abcd126fe8331bf9ad24229e`
+- `scripts_old/agent_ci_smoke.py` bytes=`2455` sha256=`9ccb52d128309b6cc2817f67f4779e46d1e4e6a2fdfa163ce98058d763a76b65`
+- `scripts_old/audit_output.py` bytes=`8731` sha256=`fc17031874cfa1ae69e91e28b896043747685adaa5ef2a79efe1ea3aa986d6f3`
+- `scripts_old/common.py` bytes=`5571` sha256=`6e55b9598ab9c98740961cf2004c15af2f99b6c873b340f5650345ca9229108d`
+- `scripts_old/cross_chain_sentiment_monitor.py` bytes=`6320` sha256=`c233285bcb784aebb412a3df180dffae490038debddd7f5b6cc388978e7431ec`
+- `scripts_old/execution_lab_sweeper.py` bytes=`3075` sha256=`3c2a3aeeeadd7641896d637d29ef990ab34809c9bdf1dddb4c7132541b366c4b`
+- `scripts_old/forensic_deep_analysis.py` bytes=`19342` sha256=`23c00ad25fb1f6cb592995ccd02871e477874987abfa452dfe128cf7dd689922`
+- `scripts_old/security_history_scan.py` bytes=`4038` sha256=`95391f0a58829fc55cb05dcea9aa3ceeea31d0b5ee82c578f6b5d115e2e14847`
+- `scripts_old/security_scan.py` bytes=`4612` sha256=`71a5be98e1b96e7e021c63d098dfaf2bc8c01ef65ad25546c8cabf1d0b545da4`
+- `scripts_old/trigger_orchestration_system.py` bytes=`9019` sha256=`2e20bd61e9875fb44da5e00900c5c778fd21cd384bc85223e13eb2262d1ff9ae`
+- `scripts_old/upload_all_to_supabase.py` bytes=`3500` sha256=`7f3d0a0f903b127438f40d893c1046ab8e8870b990a80b532d22447859f04c6d`
+- `scripts_old/upload_to_supabase.py` bytes=`5907` sha256=`a1a4d7433bad55652ffc623d829b9d70d4270738277153a91ced0a568e85f4a8`
+- `scripts_old/verify_forge_artifact_widgets.py` bytes=`6210` sha256=`3749385908fbe2a580297a3eba5ca5452ef18a94c7bc713ff3178f720e603c26`
+- `solana-dev-skill-main.zip` bytes=`110544` sha256=`48aa75211ec0e6637c618ffd1e80ac94279d530a9e764f0c3b700d4738735ed1`
+- `solana-dev-skill-main/.gitignore` bytes=`144` sha256=`9ae79983fdf3cd8d43a35bb827683c04a6848c714ed15e45726c5d210ae1f7ae`
+- `solana-dev-skill-main/LICENSE` bytes=`1056` sha256=`1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685`
+- `solana-dev-skill-main/README.md` bytes=`4964` sha256=`325e07f9cca62f32b6e70a23e44edbae350724c257ea20782d01001e8bcc61bb`
+- `solana-dev-skill-main/install.sh` bytes=`2280` sha256=`4f9b2e6de3cf70692c7ec6652bd8e2c7a1f5610426aa1949dfbd2214d5128c5a`
+- `solana-dev-skill-main/skill/SKILL.md` bytes=`9457` sha256=`7b18e2aaa84ba6499e73c7d643c4cbd311125e3e1502431e290054418e0637ab`
+- `solana-dev-skill-main/skill/references/anchor/migrating-v0.32-to-v1.md` bytes=`32004` sha256=`a82dbadf0f397d6f7f8c68a8534b8431114b0bbe41f663b6467a196bb73c4eb7`
+- `solana-dev-skill-main/skill/references/common-errors.md` bytes=`20996` sha256=`41a071707d9cc64e8763796cff8fcd10d7dcebf29504aed9e465eb3921bbe488`
+- `solana-dev-skill-main/skill/references/compatibility-matrix.md` bytes=`13192` sha256=`39e812df094e879acda9875410e7488d47acf38964156a3b975dadef45ca183b`
+- `solana-dev-skill-main/skill/references/confidential-transfers.md` bytes=`26096` sha256=`3f834b7ae8bca3652981a0325ac208f77132fb8dfedaf0f06be7bd7632ca2209`
+- `solana-dev-skill-main/skill/references/frontend-framework-kit.md` bytes=`3337` sha256=`0d515aca9e2f77b733072d5a59843d45a8c75c255b28110ceef60dc7a7dcaa31`
+- `solana-dev-skill-main/skill/references/idl-codegen.md` bytes=`1630` sha256=`8ec45eb6922ea42fe848a3d1f1b648b2c9ab8da78c2958eae57b3a5f091e0cd9`
+- `solana-dev-skill-main/skill/references/kit-web3-interop.md` bytes=`2246` sha256=`6654a192affcb9724949a143a55ec1253705a201243ea0b79f99f423c85426b5`
+- `solana-dev-skill-main/skill/references/kit/accounts.md` bytes=`3941` sha256=`9d891a3a18ec45a6c23af279171085a16bca5b305faaf4963dcfb6b24eff7c78`
+- `solana-dev-skill-main/skill/references/kit/advanced.md` bytes=`15347` sha256=`9a85db6f6644394dad9a1dbfb2e442c7afae65817d85120bd79dfd9e288b2f10`
+- `solana-dev-skill-main/skill/references/kit/codama.md` bytes=`2525` sha256=`ac18ec9c89ecde7934d43ee16a4f0e47b0fe03367007fcb142522b4754adecdd`
+- `solana-dev-skill-main/skill/references/kit/codecs.md` bytes=`4065` sha256=`8c81a9d44098c63f4daf9d53ec5b4416c18365c4886cce1358a17ec4e5be26bf`
+- `solana-dev-skill-main/skill/references/kit/gotchas.md` bytes=`6837` sha256=`0e0d5e033aebc66dfa0fe0e103e36a25e7b8656c09e1a60c2bd0e0f465cfd114`
+- `solana-dev-skill-main/skill/references/kit/overview.md` bytes=`12085` sha256=`71598c6b237690b09f70b264ec153a13f9376b274574a1f61588e1522635692c`
+- `solana-dev-skill-main/skill/references/kit/plugins.md` bytes=`11424` sha256=`1e56adb385f23d555ff5c554137a3baf78aef28166541c0e006b1e096d869505`
+- `solana-dev-skill-main/skill/references/kit/programs/compute-budget.md` bytes=`6263` sha256=`adb4f75f714d92dec9e557dda95b0024650f599c563eae66be2bc4fc14472812`
+- `solana-dev-skill-main/skill/references/kit/programs/system.md` bytes=`4041` sha256=`a6d61084bd3d5192f9e37b3f3b0c16b95e2ea02b98cb87725688162a50b50d3d`
+- `solana-dev-skill-main/skill/references/kit/programs/token-2022.md` bytes=`2510` sha256=`26a841a3c7edfaff8898de2f32e18130f56d1584274ca3432458e1cfa47d1f8d`
+- `solana-dev-skill-main/skill/references/kit/programs/token.md` bytes=`6709` sha256=`c903094a3c66d69e5c3ee2739dd0021254020283ecff16c16f8f74370982b2f6`
+- `solana-dev-skill-main/skill/references/kit/react.md` bytes=`4301` sha256=`c545e0518c3d89665eb8b440dac38f5a80dc7a4989d2a0b5ca96cd06b95cb170`
+- `solana-dev-skill-main/skill/references/payments.md` bytes=`1890` sha256=`fde4f0a52c45b47aac12b1a3765f9bb85e30f801af2668ee4fc876f3d26e7109`
+- `solana-dev-skill-main/skill/references/programs/anchor.md` bytes=`8664` sha256=`21b6b28df5fee4df63e2745620dfd443d220576e1d81780b876fffd4868b521a`
+- `solana-dev-skill-main/skill/references/programs/pinocchio.md` bytes=`22364` sha256=`8c8c1a20aaccbf629f4d977b61e6109064bd491a623b1fea535bb6b4776684a5`
+- `solana-dev-skill-main/skill/references/resources.md` bytes=`3430` sha256=`49a9529e48c3f99917d7c3250a6dd9329bdfcbc84f2de90c6f389e381f517a5b`
+- `solana-dev-skill-main/skill/references/security.md` bytes=`21241` sha256=`f22d442478c2e1cbd32fd404d908149dfe82ba26ddc7737f554300d49b26f54a`
+- `solana-dev-skill-main/skill/references/surfpool/cheatcodes.md` bytes=`3510` sha256=`3d7c5c704efa2715e8524e29f052b5ea6fcfb5db570b357ded360694240b4dd1`
+- `solana-dev-skill-main/skill/references/surfpool/overview.md` bytes=`21607` sha256=`43a8e23ec78835f66d0c0edfb251ca11f802fbddcd91d8c2bfe41e8f88d8e63f`
+- `solana-dev-skill-main/skill/references/testing.md` bytes=`8702` sha256=`b1c0181f91d6af51d2b8e1b5a1b17097fc10422d1ea1d76198be91c890292285`
+- `solana-dev-skill-main/tests/package.json` bytes=`221` sha256=`5e43971306f54c578ba7dd996feb6c5e87504e05e0bf4ff5aa805053ff8d9b5f`
+- `solana-dev-skill-main/tests/run.ts` bytes=`13483` sha256=`c5970bb7d11801cd6b0665029f4dc3e3f1e23a362ae583291f63004afd8efba0`
+- `sql/dune_market_same_token_swaps.sql` bytes=`1431` sha256=`7c9dfec9d29f27e6388757ba99b46625dff0c9f02d63ba98efaad9ecf48140d1`
+- `tape.csv` bytes=`1209495` sha256=`0d5ee4a2591c1434653ccc857e23ee7c987018e59719aa090103169256776bd8`
+- `tape_full.csv` bytes=`12934835` sha256=`c730ca0c0392c26062175a48782e663153c63eed47e2a51a40c61708d56376fb`
+- `tasks/RESEARCH_BACKLOG_2026.md` bytes=`3525` sha256=`a76c1eb7e3c66798b22ce61f0b8edc8a6e66168f85872ee5e5bab4eeb08ee33e`
+- `tests/README.md` bytes=`333` sha256=`434e40dbc8e7b1c900f23102ed6a9e78bbed61052357c71f7f80919df417b48f`
+- `tests/fixtures/gmgn_trend_snapshot_sample.json` bytes=`2662` sha256=`b9a2e7590fe85231eff06d6ab4e1952b60049fb197f456678cff693bb5083f33`
+- `tests/fixtures/open_positions_sample.csv` bytes=`218` sha256=`37c92b2b94fc7e6cf79a016ecc9b34ff02d917fd87dc8320ebb64b8e7cdffc45`
+- `tests/fixtures/trade_export_sample.csv` bytes=`687` sha256=`29719613f5c4d0e5e47ecaea89e00c367a24ad9848306739408bb851ba143e5f`
+- `tests/fixtures/trades_normalized_sample.csv` bytes=`279` sha256=`cdb7723d79f0acbf2210b191103698e850c7e25f7950f7158f4edc95083fc3bb`
+- `tests/test_advanced_trigger_modules.py` bytes=`4484` sha256=`d67dd4cda37689f826fb555391a1ee6fc0535e3102dab713df0117c82c840194`
+- `tests/test_backtest_fixture_pipeline.py` bytes=`3652` sha256=`24e115a1ac7a2c683dc4ccbd548d31009fe1b378ee60d6dd06e6c834f39f2fff`
+- `tests/test_context_builders.py` bytes=`5687` sha256=`29cdd55626b19d1679a591831c364d97d0559b6188065b7aa7aec84d55f5249a`
+- `tests/test_context_validation_scripts.py` bytes=`3474` sha256=`8a291a4e1ac3b03ba14ea2a16b5375eb4ae5a31e3bfa2ba2fb79d9f545b65d2f`
+- `tests/test_control_points.py` bytes=`4258` sha256=`4297fa4664c95cce9e89cbf53236248413a67a3d50b5d0efd637f77c0cfef670`
+- `tests/test_copy_stress_model.py` bytes=`1679` sha256=`3551ff276bc2fe49109a55f73d2507f3938adb1192dffb23d5b44de261e27269`
+- `tests/test_entry_context.py` bytes=`4622` sha256=`e4821874e95f414979344c2749f577a4758e34d87274eb23c8a7c77845da90cb`
+- `tests/test_fee_adjusted_pnl.py` bytes=`1290` sha256=`3f8fbb33e00350121e75489e00f8fd83fad8156adf55fbb5d202c73377bcd92a`
+- `tests/test_impossible_delayed_entry.py` bytes=`1459` sha256=`7c7ecfe98cca44c398cf96e122174c7f0a97e5e2b74a0403ab38f0f9cc459e27`
+- `tests/test_latency_sim.py` bytes=`1974` sha256=`dc944cda59a7e5bd14cfa94c1c9bde3da465bad18c687bd81210490aaaf8f989`
+- `tests/test_market_trigger_validation.py` bytes=`2458` sha256=`b440dca1fa9b7c50b58d32047a84c520af35e197e30d533c84ee8b481ee77f5a`
+- `tests/test_market_wide_enrichment.py` bytes=`3660` sha256=`4ebbc54a57a18f9fdf8de4ccf24ee4d9e046f5c4e2fba4dbd37cf98ec840eb94`
+- `tests/test_pairing_fifo.py` bytes=`1187` sha256=`65c43284a4f7a1e391dd905bf3c30dab0094f10e6ee5abf1a4d15e45f7c6e0d4`
+- `tests/test_parse_gmgn_trend_snapshot.py` bytes=`2093` sha256=`c148596ed21e5a20753ec31f5d1dbb49da135b0931237fc8f050b944135520c9`
+- `tests/test_trigger_tests.py` bytes=`3015` sha256=`c15741bb5bfafae618887e9b5878541fcb54e5c62a8d0a42b1986661f671742b`
+- `uploads/Screenshot_2026-05-23-04-08-53-21_d365b52accad0f47adbc08c16219827d.jpg` bytes=`144449` sha256=`610ec918634917a52d1efe30c79c814468aef29ce5bee0d5cb6bae2a8e1cb214`

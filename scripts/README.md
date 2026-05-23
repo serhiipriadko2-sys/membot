@@ -40,6 +40,10 @@ before proceeding. See `docs/RPC_PROVIDER_STRATEGY.md`.
 27_enrich_entry_context_market.py # Join market context onto entry context
 28_build_helius_enrichment.py    # Parse local Helius enhanced tx export
 29_test_market_triggers.py       # Test market-wide context against control anchors
+fast10_detector_emitter.py       # Smoke-only Observer latency CSV emitter
+fast10_observer.py               # No-key signal -> Jupiter quote latency harness
+observer_gate_eval.py            # Evaluate Observer live-run coverage/latency gate
+observer_package_audit.py        # Audit delivery ZIP manifest, hashes, noise, secrets
 33_test_dune_aggregate_context.py # Test precomputed Dune aggregate entry/control context
 ```
 
@@ -119,6 +123,28 @@ python scripts/33_test_dune_aggregate_context.py --input result.csv
 
 This path validates aggregate entry/control separation only. It is not raw
 wallet accounting and is not a trading signal.
+
+## Observer live-run gate
+
+Smoke-only CSV plumbing:
+
+```powershell
+py scripts\fast10_detector_emitter.py --output data\processed\observer_latency_live.csv --rows 1
+py scripts\observer_gate_eval.py --input data\processed\observer_latency_live.csv --run-mode smoke
+```
+
+Network-enabled monitoring run:
+
+```powershell
+py scripts\fast10_observer.py --input data\processed\fast10_live_candidates.csv --output data\processed\observer_latency_live.csv --limit 100
+py scripts\observer_gate_eval.py --input data\processed\observer_latency_live.csv --run-mode live --min-live-rows 50
+```
+
+The mandatory CSV fields are `signal_ts_ms`, `detected_ts_ms`,
+`quote_start_ts_ms`, `quote_end_ts_ms`, `detector_latency_ms`,
+`quote_latency_ms`, `total_latency_ms`, `quote_ok`, and `error`.
+
+`SMOKE_ONLY` means the harness is wired, not that live signals are proven.
 
 ## Dune export template
 

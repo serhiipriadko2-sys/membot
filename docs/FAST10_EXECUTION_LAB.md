@@ -81,13 +81,31 @@ Components:
 ## Observer PASS
 
 ```text
-p50 signal_to_quote_ms < 500
-p90 signal_to_quote_ms < 1000
+p50 total_latency_ms < 500
+p90 total_latency_ms < 1000
+p50/p90 quote_latency_ms populated
+p50/p90 detector_latency_ms populated
 quote coverage >= 90%
 no private keys
 no live orders
 complete audit log
 ```
+
+The mandatory Observer CSV schema is:
+
+```text
+signal_ts_ms
+detected_ts_ms
+quote_start_ts_ms
+quote_end_ts_ms
+detector_latency_ms
+quote_latency_ms
+total_latency_ms
+quote_ok
+error
+```
+
+`595 ms` without this breakdown is a technical warning, not a strategy verdict.
 
 ## Paper Execution PASS
 

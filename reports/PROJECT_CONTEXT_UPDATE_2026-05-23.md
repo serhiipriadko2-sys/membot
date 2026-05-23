@@ -188,34 +188,33 @@ observer_latency_live.csv
 Columns:
 
 ```text
-signal_id
-token_mint
-signal_chain_time
-detected_local_time
-quote_request_time
-quote_response_time
-route_time_ms
-signal_to_detect_ms
-detect_to_quote_ms
-total_signal_to_quote_ms
-input_mint
-output_mint
-amount
-slippage_bps
-price_impact_pct
-context_slot
-simulated_entry_price
-status
+signal_ts_ms
+detected_ts_ms
+quote_start_ts_ms
+quote_end_ts_ms
+detector_latency_ms
+quote_latency_ms
+total_latency_ms
+quote_ok
+error
 ```
 
 PASS for moving from Observer to Paper:
 
 ```text
-p50 total_signal_to_quote_ms < 500
-p90 total_signal_to_quote_ms < 1000
+p50 total_latency_ms < 500
+p90 total_latency_ms < 1000
+p50/p90 quote_latency_ms populated
+p50/p90 detector_latency_ms populated
 quote coverage >= 90%
 no private keys involved
 all signals logged
+```
+
+Current observer wording must stay:
+
+```text
+Observer harness validated; live network run pending.
 ```
 
 ## 11. Final debrief

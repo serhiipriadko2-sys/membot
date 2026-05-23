@@ -135,7 +135,7 @@ def main() -> None:
     payload = build_payload(signature_payload, rows_by_signature, errors, skipped)
     write_json(output_path, payload)
     print(
-        f"[OK] wrote {len(rows)} transactions; "
+        f"[OK] wrote {payload['count']} transactions; "
         f"errors={len(errors)} skipped_existing={skipped} coverage={payload['coverage_pct']}%"
     )
 
