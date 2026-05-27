@@ -1,0 +1,88 @@
+{
+  "source": {
+    "page": "https://gmgn.ai/trend",
+    "title": "В тренде - GMGN.AI",
+    "chain": "sol"
+  },
+  "extracted_at_context": {
+    "section": "В тренде",
+    "time_filters": ["1m", "5m", "1h", "6h", "24h"]
+  },
+  "tokens": [
+    {
+      "name": "SCHIZO",
+      "age": "1m",
+      "address_short": "62t1...pump",
+      "score_in_card": 77,
+      "links": {
+        "x_search": "https://x.com/search?q=%28$SCHIZO OR 62t1E5e2h6XCJk78D3x1NMUzX6TQGhmnj7AxeQSypump%29&src=typed_query&f=live",
+        "website": "https://schizofeed.fun/",
+        "token_page": "https://pump.fun/coin/62t1E5e2h6XCJk78D3x1NMUzX6TQGhmnj7AxeQSypump"
+      },
+      "action": "Покупка"
+    },
+    {
+      "name": "RAVE",
+      "age": "13m",
+      "address_short": "2rcc...pump",
+      "score_in_card": 20,
+      "links": {
+        "x_search": "https://x.com/search?q=%28$RAVE OR 2rcc2kjoKb3CTG6hrYNuTZ22aESuB1DJqJytSmzUpump%29&src=typed_query&f=live",
+        "telegram": "https://t.me/crabravegangsol",
+        "token_page": "https://pump.fun/coin/2rcc2kjoKb3CTG6hrYNuTZ22aESuB1DJqJytSmzUpump"
+      },
+      "action": "Покупка"
+    }
+  ],
+  "metrics_by_order": [
+    {
+      "token_order": 1,
+      "token_name": "SCHIZO",
+      "market_cap": "$39.4K",
+      "growth": "+239.9%",
+      "ath_mc": "$108.4K",
+      "liquidity": "🔥 $3.5K",
+      "volume_1h": "$3.1K",
+      "transactions_1h": 947,
+      "buys_sells": "468 / 479",
+      "holders": 210,
+      "total_fees": "0.011 SOL",
+      "metric_a": "7%",
+      "token_info": "DS",
+      "metric_b": "0.1%",
+      "metric_c": "0%",
+      "metric_d": "0.8%",
+      "metric_e": "7.09%",
+      "metric_f": "Unpaid",
+      "metric_g": "2 / 7.1%"
+    },
+    {
+      "token_order": 2,
+      "token_name": "RAVE",
+      "market_cap": "$5.7K",
+      "growth": "+26.7%",
+      "ath_mc": "$12.2K",
+      "liquidity": "🔥 $8.1K",
+      "volume_1h": "$25.2K",
+      "transactions_1h": 678,
+      "buys_sells": "376 / 302",
+      "holders": 57,
+      "total_fees": "1.2 SOL",
+      "metric_a": "22%",
+      "token_info": "DS",
+      "metric_b": "0%",
+      "metric_c": "15%",
+      "metric_d": "2%",
+      "metric_e": "0%",
+      "metric_f": "$299 CTO",
+      "metric_g": "21 / 18.57%"
+    }
+  ],
+  "notes": {
+    "mapping_rule": "Блоки метрик сопоставлены токенам по порядку следования в тексте.",
+    "uncertainty": [
+      "Нижние метрики частично без явных подписей.",
+      "Поля metric_a ... metric_g сохранены как есть, без домысливания названий."
+    ]
+  }
+}
