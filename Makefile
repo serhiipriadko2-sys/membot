@@ -1,7 +1,7 @@
 # Membot Development Makefile
 # Quick reference: make help
 
-.PHONY: help clean install lint format test test-coverage data-check restore-data docs observer-smoke observer-live audit
+.PHONY: help clean install lint format test test-coverage data-check restore-data docs observer-smoke observer-live research-schema-check research-registry-smoke audit
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -21,13 +21,13 @@ lint: ## Run linters (flake8, mypy)
 	mypy scripts/ app/ tests/ --ignore-missing-imports --no-strict-optional
 
 format: ## Format code with black
-	black scripts/ app/ tests/ --line-length=120
+	black scripts/ app/ tests/ src/ --line-length=120
 
 test: ## Run all tests
 	pytest tests/ -v
 
 test-coverage: ## Run tests with coverage report
-	pytest tests/ -v --cov=scripts --cov=app --cov-report=html --cov-report=term-missing
+	pytest tests/ -v --cov=scripts --cov=app --cov=src --cov-report=html --cov-report=term-missing
 
 data-check: ## Check if processed data files exist
 	@echo "Checking for required data files..."
@@ -54,6 +54,12 @@ observer-live: ## Run Observer live test (requires network and API keys)
 	@echo "WARNING: This requires valid RPC/API configuration"
 	python scripts/fast10_observer.py --input data/processed/fast10_live_candidates.csv --output data/processed/observer_latency_live.csv --limit 100
 	python scripts/observer_gate_eval.py --input data/processed/observer_latency_live.csv --run-mode live --min-live-rows 50
+
+research-schema-check: ## Validate live Supabase six-table research schema
+	python scripts/validate_live_schema.py
+
+research-registry-smoke: ## Write one research_run and one research_finding smoke row
+	python scripts/research_registry_smoke.py
 
 audit: ## Run package audit and generate reports
 	python scripts/observer_package_audit.py
