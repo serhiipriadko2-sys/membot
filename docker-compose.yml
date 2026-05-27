@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # Solana Log Ingester
+  ingester:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m src.ingest.solana_ingester
+    environment:
+      - SOLANA_RPC_WS_URL=wss://api.devnet.solana.com
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - membot-network
+
+  # Schema Validator & Storage Worker
+  storage-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m src.storage.parquet_store
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - ingester
+    restart: unless-stopped
+    networks:
+      - membot-network
+
+  # Analytics Engine (Bayesian + Observer)
+  analytics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m src.analytics.bayesian_engine
+    volumes:
+      - ./data:/app/data
+    environment:
+      - CONFIRMATION_THRESHOLD=0.95
+      - REJECTION_THRESHOLD=0.05
+    depends_on:
+      - storage-worker
+    restart: unless-stopped
+    networks:
+      - membot-network
+
+  # API Server (FastAPI monitoring)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - analytics
+    restart: unless-stopped
+    networks:
+      - membot-network
+
+  # Streamlit Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: streamlit run src/api/dashboard.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - membot-network
+
+networks:
+  membot-network:
+    driver: bridge
+
+volumes:
+  data:
