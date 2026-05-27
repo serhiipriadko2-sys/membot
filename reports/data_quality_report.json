@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-05-27T04:56:58.912059",
+  "timestamp": "2026-05-27T08:53:58.258088",
   "files_checked": 5,
-  "total_issues": 7,
+  "total_issues": 1,
   "files": {
     "entry_context.csv": {
       "rows": 60,
@@ -126,199 +126,111 @@
       },
       "status": "PASSED"
     },
-    "wallet_swaps.csv": {
-      "rows": 100,
-      "columns": 22,
+    "observer_latency_live.csv": {
+      "rows": 5,
+      "columns": 9,
       "column_names": [
-        "tx_signature",
-        "timestamp",
-        "slot",
-        "wallet_address",
-        "mint",
-        "side",
-        "amount_in",
-        "amount_out",
-        "price_usd",
-        "market_cap_usd",
-        "liquidity_usd",
-        "volume_velocity_tps",
-        "token_age_seconds",
-        "mint_authority_revoked",
-        "freeze_authority_revoked",
-        "lp_locked",
-        "top10_holders_percent",
-        "pool_address",
-        "jupiter_route",
-        "priority_fee_lamports",
-        "jito_tip_lamports",
-        "parser_confidence"
+        "signal_ts_ms",
+        "detected_ts_ms",
+        "quote_start_ts_ms",
+        "quote_end_ts_ms",
+        "detector_latency_ms",
+        "quote_latency_ms",
+        "total_latency_ms",
+        "quote_ok",
+        "error"
       ],
       "nil_analysis": {
         "nil_percentages": {
-          "tx_signature": 0.0,
-          "timestamp": 0.0,
-          "slot": 0.0,
-          "wallet_address": 0.0,
-          "mint": 0.0,
-          "side": 0.0,
-          "amount_in": 0.0,
-          "amount_out": 0.0,
-          "price_usd": 0.0,
-          "market_cap_usd": 0.0,
-          "liquidity_usd": 0.0,
-          "volume_velocity_tps": 0.0,
-          "token_age_seconds": 0.0,
-          "mint_authority_revoked": 0.0,
-          "freeze_authority_revoked": 0.0,
-          "lp_locked": 0.0,
-          "top10_holders_percent": 0.0,
-          "pool_address": 0.0,
-          "jupiter_route": 0.0,
-          "priority_fee_lamports": 0.0,
-          "jito_tip_lamports": 0.0,
-          "parser_confidence": 0.0
+          "signal_ts_ms": 0.0,
+          "detected_ts_ms": 0.0,
+          "quote_start_ts_ms": 0.0,
+          "quote_end_ts_ms": 0.0,
+          "detector_latency_ms": 0.0,
+          "quote_latency_ms": 0.0,
+          "total_latency_ms": 0.0,
+          "quote_ok": 0.0,
+          "error": 100.0
         },
         "high_nil_columns": [],
-        "max_nil_percentage": 0.0
+        "max_nil_percentage": 100.0
       },
       "timestamp_analysis": {
         "timestamp_columns": [
-          "timestamp",
-          "priority_fee_lamports",
-          "jito_tip_lamports"
+          "signal_ts_ms",
+          "detected_ts_ms",
+          "quote_start_ts_ms",
+          "quote_end_ts_ms"
         ],
-        "anomalies": [
-          {
-            "column": "priority_fee_lamports",
-            "type": "very_old_timestamp",
-            "count": 100
-          },
-          {
-            "column": "jito_tip_lamports",
-            "type": "very_old_timestamp",
-            "count": 100
-          },
-          {
-            "column": "jito_tip_lamports",
-            "type": "duplicate_timestamps",
-            "count": 1
-          }
-        ]
+        "anomalies": []
       },
       "duplicate_analysis": {
         "full_duplicate_rows": 0,
-        "id_column_duplicates": {
-          "side": 98,
-          "parser_confidence": 28
-        },
-        "duplicate_count": 126
+        "id_column_duplicates": {},
+        "duplicate_count": 0
       },
       "statistical_analysis": {
-        "numeric_columns": 12,
+        "numeric_columns": 8,
         "statistics": {
-          "slot": {
-            "mean": 250000049.5,
-            "std": 29.011491975882016,
-            "min": 250000000.0,
-            "max": 250000099.0,
-            "median": 250000049.5,
+          "signal_ts_ms": {
+            "mean": 1779854561629.0,
+            "std": 1581.1388300841897,
+            "min": 1779854559629.0,
+            "max": 1779854563629.0,
+            "median": 1779854561629.0,
             "outliers_detected": 0
           },
-          "amount_in": {
-            "mean": 4.969274909999999,
-            "std": 3.0390021464221952,
-            "min": 0.134508,
-            "max": 9.964856,
-            "median": 4.962864,
+          "detected_ts_ms": {
+            "mean": 1779854561724.0,
+            "std": 1581.1388300841897,
+            "min": 1779854559724.0,
+            "max": 1779854563724.0,
+            "median": 1779854561724.0,
             "outliers_detected": 0
           },
-          "amount_out": {
-            "mean": 4.949640349999999,
-            "std": 3.034729790053881,
-            "min": 0.128115,
-            "max": 10.132034,
-            "median": 4.846728,
+          "quote_start_ts_ms": {
+            "mean": 1779854561724.0,
+            "std": 1581.1388300841897,
+            "min": 1779854559724.0,
+            "max": 1779854563724.0,
+            "median": 1779854561724.0,
             "outliers_detected": 0
           },
-          "price_usd": {
-            "mean": 1.0004821521999998,
-            "std": 0.030288897542278925,
-            "min": 0.95159819,
-            "max": 1.0500342,
-            "median": 0.999048435,
+          "quote_end_ts_ms": {
+            "mean": 1779854561974.0,
+            "std": 1581.1388300841897,
+            "min": 1779854559974.0,
+            "max": 1779854563974.0,
+            "median": 1779854561974.0,
             "outliers_detected": 0
           },
-          "market_cap_usd": {
-            "mean": 45548.81090000001,
-            "std": 21806.63776506122,
-            "min": 6183.74,
-            "max": 83524.57,
-            "median": 46431.445,
+          "detector_latency_ms": {
+            "mean": 95.0,
+            "std": 0.0,
+            "min": 95.0,
+            "max": 95.0,
+            "median": 95.0,
             "outliers_detected": 0
           },
-          "liquidity_usd": {
-            "mean": 26869.3574,
-            "std": 14588.348460443787,
-            "min": 2904.51,
-            "max": 49878.14,
-            "median": 28430.72,
+          "quote_latency_ms": {
+            "mean": 250.0,
+            "std": 0.0,
+            "min": 250.0,
+            "max": 250.0,
+            "median": 250.0,
             "outliers_detected": 0
           },
-          "volume_velocity_tps": {
-            "mean": 5.9634,
-            "std": 2.6371829245954435,
-            "min": 1.22,
-            "max": 9.98,
-            "median": 6.705,
-            "outliers_detected": 0
-          },
-          "token_age_seconds": {
-            "mean": 530.02,
-            "std": 247.47063819305268,
-            "min": 36.0,
-            "max": 895.0,
-            "median": 553.5,
-            "outliers_detected": 0
-          },
-          "top10_holders_percent": {
-            "mean": 49.37089999999999,
-            "std": 17.98660332530348,
-            "min": 20.18,
-            "max": 78.93,
-            "median": 48.07,
-            "outliers_detected": 0
-          },
-          "priority_fee_lamports": {
-            "mean": 49912.46,
-            "std": 28944.124033542474,
-            "min": 1844.0,
-            "max": 99930.0,
-            "median": 45928.5,
-            "outliers_detected": 0
-          },
-          "jito_tip_lamports": {
-            "mean": 26539.21,
-            "std": 15186.05286578192,
-            "min": 49.0,
-            "max": 49023.0,
-            "median": 29562.0,
-            "outliers_detected": 0
-          },
-          "parser_confidence": {
-            "mean": 0.9248700000000001,
-            "std": 0.045039523608367424,
-            "min": 0.851,
-            "max": 1.0,
-            "median": 0.927,
+          "total_latency_ms": {
+            "mean": 345.0,
+            "std": 0.0,
+            "min": 345.0,
+            "max": 345.0,
+            "median": 345.0,
             "outliers_detected": 0
           }
         }
       },
-      "status": "WARNING",
-      "issues": [
-        "timestamp_anomalies",
-        "duplicates_found"
-      ]
+      "status": "PASSED"
     },
     "control_points.csv": {
       "rows": 180,
@@ -367,10 +279,8 @@
       },
       "duplicate_analysis": {
         "full_duplicate_rows": 0,
-        "id_column_duplicates": {
-          "anchor_id": 120
-        },
-        "duplicate_count": 120
+        "id_column_duplicates": {},
+        "duplicate_count": 0
       },
       "statistical_analysis": {
         "numeric_columns": 6,
@@ -425,10 +335,7 @@
           }
         }
       },
-      "status": "WARNING",
-      "issues": [
-        "duplicates_found"
-      ]
+      "status": "PASSED"
     },
     "trades_paired.csv": {
       "rows": 50,
@@ -482,13 +389,7 @@
           "entry_top10_holders_percent": 0.0,
           "reject_reason": 74.0
         },
-        "high_nil_columns": [
-          {
-            "column": "reject_reason",
-            "percentage": 74.0,
-            "severity": "HIGH"
-          }
-        ],
+        "high_nil_columns": [],
         "max_nil_percentage": 74.0
       },
       "timestamp_analysis": {
@@ -496,13 +397,7 @@
           "entry_timestamp",
           "exit_timestamp"
         ],
-        "anomalies": [
-          {
-            "column": "exit_timestamp",
-            "type": "duplicate_timestamps",
-            "count": 1
-          }
-        ]
+        "anomalies": []
       },
       "duplicate_analysis": {
         "full_duplicate_rows": 0,
@@ -618,155 +513,180 @@
           }
         }
       },
-      "status": "WARNING",
-      "issues": [
-        {
-          "column": "reject_reason",
-          "percentage": 74.0,
-          "severity": "HIGH"
-        },
-        "timestamp_anomalies"
-      ]
+      "status": "PASSED"
     },
-    "observer_latency_live.csv": {
-      "rows": 5,
-      "columns": 9,
+    "wallet_swaps.csv": {
+      "rows": 100,
+      "columns": 22,
       "column_names": [
-        "signal_ts_ms",
-        "detected_ts_ms",
-        "quote_start_ts_ms",
-        "quote_end_ts_ms",
-        "detector_latency_ms",
-        "quote_latency_ms",
-        "total_latency_ms",
-        "quote_ok",
-        "error"
+        "tx_signature",
+        "timestamp",
+        "slot",
+        "wallet_address",
+        "mint",
+        "side",
+        "amount_in",
+        "amount_out",
+        "price_usd",
+        "market_cap_usd",
+        "liquidity_usd",
+        "volume_velocity_tps",
+        "token_age_seconds",
+        "mint_authority_revoked",
+        "freeze_authority_revoked",
+        "lp_locked",
+        "top10_holders_percent",
+        "pool_address",
+        "jupiter_route",
+        "priority_fee_lamports",
+        "jito_tip_lamports",
+        "parser_confidence"
       ],
       "nil_analysis": {
         "nil_percentages": {
-          "signal_ts_ms": 0.0,
-          "detected_ts_ms": 0.0,
-          "quote_start_ts_ms": 0.0,
-          "quote_end_ts_ms": 0.0,
-          "detector_latency_ms": 0.0,
-          "quote_latency_ms": 0.0,
-          "total_latency_ms": 0.0,
-          "quote_ok": 0.0,
-          "error": 100.0
+          "tx_signature": 0.0,
+          "timestamp": 0.0,
+          "slot": 0.0,
+          "wallet_address": 0.0,
+          "mint": 0.0,
+          "side": 0.0,
+          "amount_in": 0.0,
+          "amount_out": 0.0,
+          "price_usd": 0.0,
+          "market_cap_usd": 0.0,
+          "liquidity_usd": 0.0,
+          "volume_velocity_tps": 0.0,
+          "token_age_seconds": 0.0,
+          "mint_authority_revoked": 0.0,
+          "freeze_authority_revoked": 0.0,
+          "lp_locked": 0.0,
+          "top10_holders_percent": 0.0,
+          "pool_address": 0.0,
+          "jupiter_route": 0.0,
+          "priority_fee_lamports": 0.0,
+          "jito_tip_lamports": 0.0,
+          "parser_confidence": 0.0
         },
-        "high_nil_columns": [
-          {
-            "column": "error",
-            "percentage": 100.0,
-            "severity": "HIGH"
-          }
-        ],
-        "max_nil_percentage": 100.0
+        "high_nil_columns": [],
+        "max_nil_percentage": 0.0
       },
       "timestamp_analysis": {
         "timestamp_columns": [
-          "signal_ts_ms",
-          "detected_ts_ms",
-          "quote_start_ts_ms",
-          "quote_end_ts_ms"
+          "timestamp"
         ],
-        "anomalies": [
-          {
-            "column": "signal_ts_ms",
-            "type": "duplicate_timestamps",
-            "count": 4
-          },
-          {
-            "column": "detected_ts_ms",
-            "type": "duplicate_timestamps",
-            "count": 4
-          },
-          {
-            "column": "quote_start_ts_ms",
-            "type": "duplicate_timestamps",
-            "count": 4
-          },
-          {
-            "column": "quote_end_ts_ms",
-            "type": "duplicate_timestamps",
-            "count": 4
-          }
-        ]
+        "anomalies": []
       },
       "duplicate_analysis": {
         "full_duplicate_rows": 0,
-        "id_column_duplicates": {},
-        "duplicate_count": 0
+        "id_column_duplicates": {
+          "parser_confidence": 28
+        },
+        "duplicate_count": 28
       },
       "statistical_analysis": {
-        "numeric_columns": 8,
+        "numeric_columns": 12,
         "statistics": {
-          "signal_ts_ms": {
-            "mean": 1779854561629.0,
-            "std": 1581.1388300841897,
-            "min": 1779854559629.0,
-            "max": 1779854563629.0,
-            "median": 1779854561629.0,
+          "slot": {
+            "mean": 250000049.5,
+            "std": 29.011491975882016,
+            "min": 250000000.0,
+            "max": 250000099.0,
+            "median": 250000049.5,
             "outliers_detected": 0
           },
-          "detected_ts_ms": {
-            "mean": 1779854561724.0,
-            "std": 1581.1388300841897,
-            "min": 1779854559724.0,
-            "max": 1779854563724.0,
-            "median": 1779854561724.0,
+          "amount_in": {
+            "mean": 4.969274909999999,
+            "std": 3.0390021464221952,
+            "min": 0.134508,
+            "max": 9.964856,
+            "median": 4.962864,
             "outliers_detected": 0
           },
-          "quote_start_ts_ms": {
-            "mean": 1779854561724.0,
-            "std": 1581.1388300841897,
-            "min": 1779854559724.0,
-            "max": 1779854563724.0,
-            "median": 1779854561724.0,
+          "amount_out": {
+            "mean": 4.949640349999999,
+            "std": 3.034729790053881,
+            "min": 0.128115,
+            "max": 10.132034,
+            "median": 4.846728,
             "outliers_detected": 0
           },
-          "quote_end_ts_ms": {
-            "mean": 1779854561974.0,
-            "std": 1581.1388300841897,
-            "min": 1779854559974.0,
-            "max": 1779854563974.0,
-            "median": 1779854561974.0,
+          "price_usd": {
+            "mean": 1.0004821521999998,
+            "std": 0.030288897542278925,
+            "min": 0.95159819,
+            "max": 1.0500342,
+            "median": 0.999048435,
             "outliers_detected": 0
           },
-          "detector_latency_ms": {
-            "mean": 95.0,
-            "std": 0.0,
-            "min": 95.0,
-            "max": 95.0,
-            "median": 95.0,
+          "market_cap_usd": {
+            "mean": 45548.81090000001,
+            "std": 21806.63776506122,
+            "min": 6183.74,
+            "max": 83524.57,
+            "median": 46431.445,
             "outliers_detected": 0
           },
-          "quote_latency_ms": {
-            "mean": 250.0,
-            "std": 0.0,
-            "min": 250.0,
-            "max": 250.0,
-            "median": 250.0,
+          "liquidity_usd": {
+            "mean": 26869.3574,
+            "std": 14588.348460443787,
+            "min": 2904.51,
+            "max": 49878.14,
+            "median": 28430.72,
             "outliers_detected": 0
           },
-          "total_latency_ms": {
-            "mean": 345.0,
-            "std": 0.0,
-            "min": 345.0,
-            "max": 345.0,
-            "median": 345.0,
+          "volume_velocity_tps": {
+            "mean": 5.9634,
+            "std": 2.6371829245954435,
+            "min": 1.22,
+            "max": 9.98,
+            "median": 6.705,
+            "outliers_detected": 0
+          },
+          "token_age_seconds": {
+            "mean": 530.02,
+            "std": 247.47063819305268,
+            "min": 36.0,
+            "max": 895.0,
+            "median": 553.5,
+            "outliers_detected": 0
+          },
+          "top10_holders_percent": {
+            "mean": 49.37089999999999,
+            "std": 17.98660332530348,
+            "min": 20.18,
+            "max": 78.93,
+            "median": 48.07,
+            "outliers_detected": 0
+          },
+          "priority_fee_lamports": {
+            "mean": 49912.46,
+            "std": 28944.124033542474,
+            "min": 1844.0,
+            "max": 99930.0,
+            "median": 45928.5,
+            "outliers_detected": 0
+          },
+          "jito_tip_lamports": {
+            "mean": 26539.21,
+            "std": 15186.05286578192,
+            "min": 49.0,
+            "max": 49023.0,
+            "median": 29562.0,
+            "outliers_detected": 0
+          },
+          "parser_confidence": {
+            "mean": 0.9248700000000001,
+            "std": 0.045039523608367424,
+            "min": 0.851,
+            "max": 1.0,
+            "median": 0.927,
             "outliers_detected": 0
           }
         }
       },
       "status": "WARNING",
       "issues": [
-        {
-          "column": "error",
-          "percentage": 100.0,
-          "severity": "HIGH"
-        },
-        "timestamp_anomalies"
+        "duplicates_found"
       ]
     }
   }

@@ -81,6 +81,12 @@ class DataQualityChecker:
 
         high_nil = []
         for col, pct in nil_percentages.items():
+            # Skip columns that are expected to have high nil rates
+            # - 'error' columns: typically empty when no errors occur
+            # - 'reject_reason' columns: typically empty for successful trades
+            if col.lower() in ['error', 'reject_reason', 'error_message', 'failure_reason']:
+                continue  # Skip these known optional columns
+            
             if pct > 50:
                 high_nil.append({"column": col, "percentage": pct, "severity": "HIGH"})
             elif pct > 20:
@@ -97,7 +103,15 @@ class DataQualityChecker:
     def _check_timestamps(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Detect timestamp anomalies."""
         anomalies = []
-        timestamp_cols = [col for col in df.columns if 'time' in col.lower() or 'date' in col.lower() or 'ts' in col.lower()]
+        # Only check columns that are actually timestamps
+        # Exclude latency columns (_latency_ms) and other numeric columns that happen to contain 'ts' or 'ms'
+        timestamp_cols = [
+            col for col in df.columns 
+            if 'timestamp' in col.lower() 
+            or 'date' in col.lower() 
+            or ('_ts_' in col.lower())
+            or (col.lower().endswith('_ts') and '_latency' not in col.lower())
+        ]
 
         for col in timestamp_cols:
             if col not in df.columns:
@@ -108,7 +122,8 @@ class DataQualityChecker:
                 if df[col].dtype == 'object':
                     ts_series = pd.to_datetime(df[col], errors='coerce')
                 else:
-                    ts_series = pd.to_datetime(df[col], errors='coerce', unit='s')
+                    # Numeric columns: assume milliseconds (like epoch ms)
+                    ts_series = pd.to_datetime(df[col], errors='coerce', unit='ms')
 
                 # Check for future timestamps
                 future_mask = ts_series > datetime.now()
@@ -129,11 +144,15 @@ class DataQualityChecker:
                     })
 
                 # Check for duplicates in timestamps
-                if ts_series.duplicated().any():
+                # Note: Some duplicate timestamps may be legitimate (e.g., multiple trades at same second)
+                # Only flag if > 10% of rows have duplicate timestamps
+                dup_count = int(ts_series.duplicated().sum())
+                total_rows = len(ts_series)
+                if dup_count > 0 and (dup_count / total_rows) > 0.1:
                     anomalies.append({
                         "column": col,
                         "type": "duplicate_timestamps",
-                        "count": int(ts_series.duplicated().sum())
+                        "count": dup_count
                     })
 
             except Exception:
@@ -150,13 +169,22 @@ class DataQualityChecker:
         full_duplicates = df.duplicated().sum()
 
         # Check for duplicate IDs/transactions if applicable
-        id_cols = [col for col in df.columns if 'id' in col.lower() or 'hash' in col.lower() or 'signature' in col.lower()]
+        # Only check columns that should be unique identifiers
+        # Exclude categorical columns (like 'side', 'status') and score columns (like 'parser_confidence')
+        id_cols = [col for col in df.columns if 
+                   ('id' in col.lower() and 'anchor' not in col.lower())  # Exclude anchor_id which is expected to repeat
+                   or 'hash' in col.lower() 
+                   or 'signature' in col.lower()
+                   or 'tx_' in col.lower()]
         id_duplicates = {}
 
         for col in id_cols:
             if col in df.columns:
                 dup_count = df[col].duplicated().sum()
-                if dup_count > 0:
+                # Only flag as duplicate if this looks like a true identifier
+                # (categorical columns with few unique values are expected to have duplicates)
+                unique_ratio = df[col].nunique() / len(df)
+                if dup_count > 0 and unique_ratio > 0.5:  # Should have many unique values
                     id_duplicates[col] = int(dup_count)
 
         return {

@@ -1,1 +1,44 @@
-Nothing needs to be added to .gitignore since the changes only include source files (.py), configuration files (.md), and no build artifacts, dependencies, or temporary files.
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Coverage reports
+.coverage
+coverage/
+htmlcov/
+
+# Distribution artifacts
+dist/
+build/
+*.egg-info/
+
+# Python cache
+*.pyc
+**/__pycache__/
+*.pyo
+*.pyd
+
+# MyPy cache
+.mypy_cache/
+
+# Pytest cache
+.pytest_cache/
