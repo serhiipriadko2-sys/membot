@@ -1,0 +1,190 @@
+# Observer Gate Nightly Test
+
+name: Observer Gate Nightly
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      run_mode:
+        description: 'Run mode (smoke or live)'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - live
+      min_live_rows:
+        description: 'Minimum live rows required (live mode only)'
+        required: false
+        default: '50'
+        type: string
+
+jobs:
+  observer-gate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pandas requests python-dotenv
+      
+      - name: Check RPC health
+        run: |
+          echo "Checking RPC health..."
+          python scripts/00_check_rpc_health.py || echo "RPC health check skipped (no keys configured)"
+        env:
+          SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
+          HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+      
+      - name: Generate synthetic data (if needed)
+        run: |
+          if [ ! -f data/processed/entry_context.csv ]; then
+            echo "Generating synthetic data fixtures..."
+            python scripts/_generate_synthetic_data.py
+          fi
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      
+      - name: Run Fast10 Detector Emitter (smoke test)
+        run: |
+          echo "Running Fast10 detector emitter..."
+          mkdir -p data/processed
+          python scripts/fast10_detector_emitter.py \
+            --output data/processed/observer_latency_live.csv \
+            --rows 10
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      
+      - name: Run Observer Gate Eval (smoke mode)
+        run: |
+          echo "Running Observer gate evaluation (smoke mode)..."
+          python scripts/observer_gate_eval.py \
+            --input data/processed/observer_latency_live.csv \
+            --run-mode smoke \
+            --report-json reports/observer_gate_nightly.json \
+            --report-md reports/observer_gate_nightly.md
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      
+      - name: Upload nightly report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: observer-gate-nightly-report
+          path: |
+            reports/observer_gate_nightly.json
+            reports/observer_gate_nightly.md
+            data/processed/observer_latency_live.csv
+          retention-days: 30
+      
+      - name: Post results to job summary
+        run: |
+          echo "## Observer Gate Nightly Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Mode:** smoke" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f reports/observer_gate_nightly.md ]; then
+            echo "### Report Summary" >> $GITHUB_STEP_SUMMARY
+            cat reports/observer_gate_nightly.md >> $GITHUB_STEP_SUMMARY
+          fi
+
+  live-observer:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_mode == 'live'
+    needs: observer-gate
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pandas requests python-dotenv
+      
+      - name: Validate secrets exist
+        run: |
+          if [ -z "${{ secrets.SOLANA_RPC_URL }}" ]; then
+            echo "::error::SOLANA_RPC_URL secret is not configured"
+            exit 1
+          fi
+          if [ -z "${{ secrets.HELIUS_API_KEY }}" ]; then
+            echo "::warning::HELIUS_API_KEY secret is not configured"
+          fi
+      
+      - name: Create live candidates file
+        run: |
+          echo "Creating placeholder for live candidates..."
+          mkdir -p data/processed
+          echo "signal_ts_ms,detected_ts_ms,mint,wallet_address" > data/processed/fast10_live_candidates.csv
+          # In production, this would be populated by a real-time signal detector
+      
+      - name: Run Fast10 Observer (live mode)
+        run: |
+          echo "Running Fast10 Observer (live mode)..."
+          python scripts/fast10_observer.py \
+            --input data/processed/fast10_live_candidates.csv \
+            --output data/processed/observer_latency_live.csv \
+            --limit 100
+        env:
+          SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
+          HELIUS_API_KEY: ${{ secrets.HELIUS_API_KEY }}
+          JUPITER_API_URL: "https://quote-api.jup.ag/v6"
+      
+      - name: Run Observer Gate Eval (live mode)
+        run: |
+          echo "Running Observer gate evaluation (live mode)..."
+          python scripts/observer_gate_eval.py \
+            --input data/processed/observer_latency_live.csv \
+            --run-mode live \
+            --min-live-rows ${{ github.event.inputs.min_live_rows || 50 }} \
+            --report-json reports/observer_gate_live.json \
+            --report-md reports/observer_gate_live.md
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      
+      - name: Upload live report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: observer-gate-live-report
+          path: |
+            reports/observer_gate_live.json
+            reports/observer_gate_live.md
+            data/processed/observer_latency_live.csv
+          retention-days: 30
+      
+      - name: Fail if gate not passed
+        run: |
+          echo "Checking if Observer gate passed..."
+          if [ -f reports/observer_gate_live.json ]; then
+            GATE_STATUS=$(python -c "import json; print(json.load(open('reports/observer_gate_live.json'))['gate_status'])")
+            if [ "$GATE_STATUS" != "PASS" ]; then
+              echo "::error::Observer gate did not pass. Status: $GATE_STATUS"
+              exit 1
+            fi
+            echo "✅ Observer gate PASSED"
+          else
+            echo "::warning::Live report not generated"
+          fi

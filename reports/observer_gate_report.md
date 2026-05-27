@@ -1,31 +1,31 @@
 # Observer Live-Run Gate Report
 
-- Source: `data\processed\observer_latency_live.csv`
-- Status: `SMOKE_ONLY`
-- Verdict: `SMOKE_ONLY`
+- Source: `/workspace/data/processed/observer_latency_live.csv`
+- Status: `ACTIVE / GATE FAILED`
+- Verdict: `FAIL`
 - Run mode: `smoke`
 - Safety: `monitoring only`, `NO_PRIVATE_KEYS`, `NO_SIGNING`, `NO_SWAP_SEND`
-
-Observer harness validated; live network run pending.
 
 ## Metrics
 
 | Metric | Value |
 |---|---:|
-| rows | `1` |
-| quote_success_count | `1` |
-| coverage_pct | `100.0` |
-| p50_total_latency_ms | `345.0` |
-| p90_total_latency_ms | `345.0` |
-| p50_quote_latency_ms | `250.0` |
-| p90_quote_latency_ms | `250.0` |
-| p50_detector_latency_ms | `95.0` |
-| p90_detector_latency_ms | `95.0` |
+| rows | `0` |
+| quote_success_count | `0` |
+| coverage_pct | `0.0` |
+| p50_total_latency_ms | `None` |
+| p90_total_latency_ms | `None` |
+| p50_quote_latency_ms | `None` |
+| p90_quote_latency_ms | `None` |
+| p50_detector_latency_ms | `None` |
+| p90_detector_latency_ms | `None` |
 
 ## Reasons
 
-- run mode is not live
-- row count 1 below live minimum 50
+- input not found: /workspace/data/processed/observer_latency_live.csv
+- missing required latency fields
+- no latency rows
+- missing_fields: `signal_ts_ms, detected_ts_ms, quote_start_ts_ms, quote_end_ts_ms, detector_latency_ms, quote_latency_ms, total_latency_ms, quote_ok, error`
 
 ## Decision Boundary
 

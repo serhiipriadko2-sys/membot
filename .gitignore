@@ -1,15 +1,46 @@
-# Python
+```
+# Build artifacts and reports
+reports/
+*.json
+*.md
+
+# Dependencies and virtual environments
+node_modules/
+venv/
+.venv/
 __pycache__/
 *.pyc
-.venv/
+*.pyo
+*.pyd
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Environment files
 .env
+.env.local
+*.env.*
 
-# Streamlit local secrets
-.streamlit/secrets.toml
+# Editors and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Outputs
-output/
-data/
-
-# OS
+# OS generated files
 .DS_Store
+Thumbs.db
+
+# Coverage and testing
+.coverage
+coverage/
+htmlcov/
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+```
