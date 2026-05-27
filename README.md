@@ -31,6 +31,10 @@ This repository is not a trading bot. It is a forensic and execution-lab workspa
 # Install dependencies
 make install
 
+# Configure environment variables
+cp .env.example .env
+# Edit .env and add your SUPABASE_KEY (replace YOUR_NEW_SECRET_KEY_HERE)
+
 # Generate synthetic data for development
 make restore-data
 
