@@ -12,11 +12,13 @@ import argparse
 import csv
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 DEFAULT_INPUT = ROOT / "data" / "processed" / "observer_latency_live.csv"
 DEFAULT_REPORT = ROOT / "reports" / "observer_gate_report.md"
 DEFAULT_JSON = ROOT / "reports" / "observer_gate_report.json"
@@ -261,6 +263,15 @@ def render_report(result: dict[str, Any], *, source_label: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+def maybe_record_research_finding(result: dict[str, Any], *, run_key: str | None) -> dict[str, Any] | None:
+    if not run_key:
+        return None
+    from repositories import ResearchRepo
+
+    repo = ResearchRepo.from_env()
+    return repo.record_observer_gate_verdict(run_key=run_key, gate_result=result)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate Observer latency gate from observer_latency_live.csv")
     parser.add_argument("--input", default=str(DEFAULT_INPUT), help="Path to observer_latency_live.csv")
@@ -268,6 +279,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--json", default=str(DEFAULT_JSON), help="JSON result path")
     parser.add_argument("--run-mode", choices=["live", "smoke"], default="live")
     parser.add_argument("--min-live-rows", type=int, default=50)
+    parser.add_argument(
+        "--research-run-key",
+        default=None,
+        help="Optional run_key. If set, writes the gate verdict into research_runs/research_findings.",
+    )
     return parser.parse_args()
 
 
@@ -275,6 +291,9 @@ def main() -> int:
     args = parse_args()
     input_path = Path(args.input)
     result = evaluate_file(input_path, run_mode=args.run_mode, min_live_rows=args.min_live_rows)
+    research_record = maybe_record_research_finding(result, run_key=args.research_run_key)
+    if research_record is not None:
+        result["research_record"] = research_record
     report = render_report(result, source_label=str(input_path))
 
     report_path = Path(args.report)
@@ -286,6 +305,8 @@ def main() -> int:
     json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(report)
+    if research_record is not None:
+        print(json.dumps({"research_record": research_record}, indent=2, ensure_ascii=False, default=str))
     if result["verdict"] == "PASS":
         return 0
     if result["verdict"] == "SMOKE_ONLY":
