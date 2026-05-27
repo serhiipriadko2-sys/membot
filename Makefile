@@ -84,4 +84,7 @@ test-market: ## Test market triggers
 ci-smoke: ## Run CI smoke test
 	python scripts/agent_ci_smoke.py
 
+quality: ## Run data quality checks
+	python scripts/data_quality_check.py
+
 all: lint test observer-smoke audit ## Run full local CI pipeline
