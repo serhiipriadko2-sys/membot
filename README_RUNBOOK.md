@@ -25,6 +25,44 @@ network-enabled run and evaluated by `scripts/observer_gate_eval.py`.
 - No Paper mode before Gate 2 PASS.
 - No Live execution before a separate security review and explicit approval.
 
+## Canonical database boundary
+
+Current live Supabase canon is the six-table registry:
+
+```text
+dataset_runs
+dataset_artifacts
+research_runs
+research_artifacts
+research_findings
+execution_lab_metrics
+```
+
+Do not create or depend on the rejected `hypotheses/events/evidence_log` draft
+without a separate ADR/design review.
+
+Validate the live schema:
+
+```bash
+python scripts/validate_live_schema.py
+```
+
+Write the smallest end-to-end registry proof:
+
+```bash
+python scripts/research_registry_smoke.py
+```
+
+To record an Observer gate verdict into the live research registry:
+
+```bash
+python scripts/observer_gate_eval.py \
+  --input data/processed/observer_latency_live.csv \
+  --run-mode live \
+  --min-live-rows 50 \
+  --research-run-key observer_gate_live_YYYY_MM_DD
+```
+
 ## Mandatory latency CSV
 
 `data/processed/observer_latency_live.csv` must contain these columns:
@@ -97,7 +135,8 @@ py scripts\fast10_observer.py `
 py scripts\observer_gate_eval.py `
   --input data\processed\observer_latency_live.csv `
   --run-mode live `
-  --min-live-rows 50
+  --min-live-rows 50 `
+  --research-run-key observer_gate_live_YYYY_MM_DD
 ```
 
 PASS minimum:
