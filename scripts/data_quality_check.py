@@ -108,7 +108,8 @@ class DataQualityChecker:
         timestamp_cols = [
             col for col in df.columns 
             if 'timestamp' in col.lower() 
-            or 'date' in col.lower() 
+            or 'date' in col.lower()
+            or 'time' in col.lower()  # Added support for '_time' suffix
             or ('_ts_' in col.lower())
             or (col.lower().endswith('_ts') and '_latency' not in col.lower())
         ]
